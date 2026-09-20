@@ -1,0 +1,96 @@
+generated: '2026-09-19'
+method: searched
+probe: true
+source: https://optionsahoy.com/privacy
+signals:
+  subprocessors:
+    url: https://optionsahoy.com/privacy
+    section: '3. Service providers we use'
+    dated: '2026-08-23'
+    entries:
+    - {vendor: Cloudflare, purpose: 'hosting (Pages), serverless backend (Pages Functions), database for signups/scenario emails/telemetry (D1), bot mitigation on forms (Turnstile), privacy-friendly analytics (Web Analytics)'}
+    - {vendor: Resend, purpose: transactional email delivery for beta signup notifications}
+    - {vendor: Zoho Mail, purpose: hosts the inbox where signup notifications are delivered}
+    - {vendor: Railway, purpose: hosts the OptionsAhoy application and its database}
+    - {vendor: Supabase, purpose: hosts the OptionsAhoy application database and the beta allowlist}
+    evidence:
+    - source: https://optionsahoy.com/privacy
+      http_status: 200
+      fetched: '2026-09-19'
+      quote: >-
+        "We share information with the providers we rely on to run the Site. The current list includes:
+        Cloudflare — hosting (Cloudflare Pages), serverless backend (Cloudflare Pages Functions), the database
+        in which signups, scenario email requests, and product telemetry are stored (Cloudflare D1), bot
+        mitigation on our forms (Cloudflare Turnstile), and privacy-friendly analytics (Cloudflare Web
+        Analytics). Resend — transactional email delivery for beta signup notifications. Zoho Mail — hosts the
+        inbox at beta@alphalatitude.com where signup notifications are delivered. Railway and Supabase — host
+        the OptionsAhoy application and its database."
+    note: >-
+      A named vendor list with purposes on a page dated "Last updated: August 23, 2026". It is a section of
+      the privacy policy rather than a standalone subprocessor table (/legal/subprocessors 404), and the
+      international-transfer paragraph adds that Cloudflare, Resend and Zoho process data in the United
+      States and other jurisdictions under SCCs where required.
+  data_subject_request:
+    url: https://optionsahoy.com/privacy
+    section: '6. Your rights — California residents; 7. Your rights — EEA, UK, and Switzerland residents'
+    channel: privacy@alphalatitude.com
+    stated_sla: null
+    rights_named: [know/access, delete/erase, correct/rectify, opt out of sale or sharing (stated as not sold or shared), limit use of sensitive personal information, restrict processing (EU/UK), portability (EU/UK), object (EU/UK), withdraw consent (EU/UK), lodge a complaint with a supervisory authority]
+    evidence:
+    - source: https://optionsahoy.com/privacy
+      http_status: 200
+      fetched: '2026-09-19'
+      quote: >-
+        "Right to delete. You may ask us to delete personal information we have collected from you, subject
+        to statutory exceptions ... You may request deletion of any of it at any time using the contact below,
+        and we will delete it across all of these locations, including any copy in the beta allowlist. ...
+        Contact privacy@alphalatitude.com for any data-protection questions."
+    note: >-
+      A documented request process with named rights and an email channel, but no response period is stated
+      and there is no intake form or API endpoint (/privacy/requests 404). Recorded without a stated_sla
+      rather than inventing one.
+probed_absent:
+- signal: sbom
+  urls:
+  - {url: 'https://optionsahoy.com/security/sbom', status: 404}
+  note: No bill of materials published. The npm package carries SLSA build provenance attestations (see conformance/), which is provenance, not an SBOM. Never derived — search only.
+- signal: support_lifetime
+  urls:
+  - {url: 'https://optionsahoy.com/changelog', status: 404}
+  note: No stated support period for the API or the packages.
+- signal: accessibility_conformance
+  urls:
+  - {url: 'https://optionsahoy.com/accessibility', status: 404}
+  - {url: 'https://optionsahoy.com/accessibility/vpat', status: 404}
+- signal: training_data_summary
+  note: Not applicable and not published — the provider's engine is deterministic and explicitly not a model ("no model inference").
+- signal: ai_transparency
+  urls:
+  - {url: 'https://optionsahoy.com/ai/transparency', status: 404}
+  note: >-
+    The site discloses the OPPOSITE posture — that its answers are not AI-generated (/why-deterministic,
+    /benchmark) — and the Poe bot routes to the same deterministic engine. No AI-interaction or AI-content
+    disclosure is published because none is claimed to apply; not recorded as a signal.
+- signal: global_privacy_control
+  note: >-
+    No published statement that Sec-GPC or a universal opt-out signal is honored. Not tested by sending a
+    header. The policy states personal information is not sold or shared as the CCPA defines those terms,
+    which removes the sale/share the signal would opt out of, but is not a GPC statement.
+- signal: data_residency
+  urls:
+  - {url: 'https://optionsahoy.com/docs/data-residency', status: 404}
+  note: The policy discloses that the site is operated from the United States and providers process data in the US and other jurisdictions; no residency choice is offered.
+- signal: incident_notification
+  urls:
+  - {url: 'https://optionsahoy.com/legal/dpa', status: 404}
+  note: No DPA and no stated breach-notification SLA. SECURITY.md commits to acknowledging vulnerability REPORTS within three business days, which is disclosure intake, not incident notification.
+- signal: age_assurance
+  note: 'Privacy §10 states the Site is not directed to children under 13 and knowingly collects nothing from them; a COPPA statement, not an age-assurance mechanism.'
+- signal: notice_and_action
+  urls:
+  - {url: 'https://optionsahoy.com/legal/report-content', status: 404}
+- signal: transparency_report
+  urls:
+  - {url: 'https://optionsahoy.com/transparency', status: 404}
+- signal: exit_assistance
+  note: Nothing is stored for a caller, so there is nothing to export; the beta platform's data practices are disclosed only under the signed beta agreement.

@@ -1,23 +1,230 @@
 aid: optionsahoy-com
 name: AlphaLatitude Inc.
-description: 'AlphaLatitude Inc. is a company surfaced via the API Evangelist harvest backlog (source:
-  a2a-registry) and added to the network as a stub for full-pipeline profiling.'
+description: >-
+  AlphaLatitude Inc. is a Sunnyvale, California C-corporation (founded March 2026) that builds OptionsAhoy, an
+  equity-compensation optimization product for individual investors: multi-year, multi-state tax planning for
+  incentive stock options and the alternative minimum tax, non-qualified stock options, restricted stock
+  units, qualified small business stock, single-stock concentration, protective-put and collar hedging, and
+  selling equity to fund a cash goal. The paid platform is an invite-only beta; the eight calculators behind
+  it are published free and keyless as in-browser tools and as three agent surfaces on one host — an
+  11-operation OpenAPI 3.1.0 REST API at https://optionsahoy.com/api/v1, a remote MCP server at
+  https://optionsahoy.com/mcp (eight annotated tools, also shipped as the optionsahoy-mcp npm stdio package
+  and a Claude Desktop bundle), and an A2A 0.3.0 agent card at /.well-known/agent-card.json with eight
+  skills. The engine is deterministic (no model inference) and the provider publishes a verification page
+  reproducing its federal and state tax math against IRS Rev. Proc. 2025-32, PSL Tax-Calculator and
+  OpenTaxSolver.
+image: https://optionsahoy.com/apple-touch-icon.png
 url: https://raw.githubusercontent.com/api-evangelist/optionsahoy-com/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:a2a-registry
-x-tier: stub
-x-tier-reason: harvest
+x-tier: profiled
+x-tier-reason: enrichment pass 2026-09-19 (local-v3; was a2a-registry harvest stub)
+x-parent-website: https://alphalatitude.com/
 specificationVersion: '0.20'
 created: '2026-09-19'
 modified: '2026-09-19'
 tags:
-- Company
-apis: []
+- Equity Compensation
+- Tax
+- Stock Options
+- Financial Planning
+- Personal Finance
+- Fintech
+- Calculators
+- MCP
+- A2A
+- agent-native
+- Deterministic
+- United States
+tags_raw:
+- Equity compensation
+- Tax
+- Stock options
+- Financial planning
+- Personal finance
+- Fintech
+- Calculators
+- MCP
+- A2A
+- Agent-native
+- Deterministic
+- United States
+apis:
+- aid: optionsahoy-com:optionsahoy-calculator-api
+  name: OptionsAhoy Calculator API
+  description: >-
+    Keyless, CORS-open REST API wrapping the eight OptionsAhoy equity-compensation calculators — multi-year
+    ISO/AMT exercise optimization, NSO exercise tax and sell-vs-hold, RSU sell-vs-hold, RSU lot-order
+    selection, single-stock concentration, protective put / zero-cost collar / put-spread pricing, Section
+    1202 QSBS qualification, and equity-funding plans for a cash goal — plus discovery, public usage stats and
+    a badge endpoint. 11 operations published as OpenAPI 3.1.0 at https://optionsahoy.com/openapi.json with
+    servers[] https://optionsahoy.com; JSON in, {ok, result, next_steps} out; every operation is a stateless
+    pure computation with federal + 50-state + DC tax tables compiled in.
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - Equity Compensation
+  - Tax
+  - Stock Options
+  - Calculators
+  - Financial Planning
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-openapi.json
+  - type: OpenAPI
+    name: OptionsAhoy Calculator API OpenAPI (provider-hosted)
+    url: https://optionsahoy.com/openapi.json
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: Overlay
+    url: overlays/optionsahoy-com-openapi-overlay.yaml
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-mcp-server
+  name: OptionsAhoy MCP Server
+  description: >-
+    Remote Model Context Protocol server at https://optionsahoy.com/mcp (Streamable HTTP, protocol version
+    2024-11-05, serverInfo OptionsAhoy 1.10.2, no authentication). initialize, tools/list, resources/list and
+    prompts/list answer anonymously: eight tools with inputSchema, outputSchema and annotations (readOnlyHint,
+    idempotentHint true on all eight), nine resources including an Apps-SDK widget, and eight prompts. The
+    same server ships as the npm stdio package optionsahoy-mcp (npx -y optionsahoy-mcp), a Claude Desktop
+    .mcpb bundle and a Gemini CLI extension, and is listed in the Official MCP Registry, Smithery, Glama and
+    the GitHub MCP Registry. Open source (MIT) at https://github.com/AlvisoOculus/optionsahoy-mcp.
+  humanURL: https://optionsahoy.com/for-agents
+  baseURL: https://optionsahoy.com/mcp
+  tags:
+  - MCP
+  - agent-native
+  - Equity Compensation
+  - Tax
+  properties:
+  - type: MCPServer
+    url: mcp/optionsahoy-com-mcp.yml
+  - type: MCPServer
+    name: OptionsAhoy MCP endpoint (Streamable HTTP)
+    url: https://optionsahoy.com/mcp
+  - type: ToolCrosswalk
+    url: mcp/optionsahoy-com-tool-crosswalk.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+- aid: optionsahoy-com:optionsahoy-a2a-agent
+  name: OptionsAhoy Equity Planner (A2A Agent)
+  description: >-
+    Agent2Agent (A2A) protocol surface: an agent card served from https://optionsahoy.com/.well-known/agent-card.json
+    (protocolVersion 0.3.0, JSONRPC transport, version 1.10.2, provider AlphaLatitude Inc.) advertising eight
+    skills whose ids are the eight MCP tool names, each run by sending a message with a DataPart
+    {"skill":"<id>","input":{...}} to the JSON-RPC endpoint at https://optionsahoy.com/a2a (message/send). The
+    endpoint answers JSON-RPC 2.0 (tasks/get returns -32001 with a note that every call completes
+    synchronously); streaming, push notifications and state-transition history are declared unsupported.
+    Keyless.
+  humanURL: https://optionsahoy.com/for-agents
+  baseURL: https://optionsahoy.com/a2a
+  tags:
+  - A2A
+  - agent-native
+  - Equity Compensation
+  properties:
+  - type: AgentCard
+    url: a2a/optionsahoy-com-a2a.yml
+  - type: AgentCard
+    name: A2A Agent Card (provider-hosted)
+    url: https://optionsahoy.com/.well-known/agent-card.json
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: AgenticAccess
+  url: agentic-access/optionsahoy-com-agentic-access.yml
+- type: VulnerabilityDisclosure
+  url: security/optionsahoy-com-vulnerability-disclosure.yml
+- type: DomainSecurity
+  url: security/optionsahoy-com-domain-security.yml
 - type: Website
   url: https://optionsahoy.com/
+- type: DeveloperPortal
+  url: https://optionsahoy.com/for-agents
+- type: Documentation
+  url: https://optionsahoy.com/for-agents
+- type: APIReference
+  url: https://optionsahoy.com/for-agents/api
+- type: GettingStarted
+  url: https://optionsahoy.com/use-from-ai-assistants
+- type: Support
+  url: https://github.com/AlvisoOculus/optionsahoy-mcp/issues
+- type: GitHubOrganization
+  url: https://github.com/AlvisoOculus
+- type: TermsOfService
+  url: https://optionsahoy.com/terms
+- type: PrivacyPolicy
+  url: https://optionsahoy.com/privacy
+- type: SecurityTxt
+  url: well-known/optionsahoy-com-security.txt
+- type: WellKnown
+  url: well-known/optionsahoy-com-well-known.yml
+- type: ContentSignal
+  url: https://optionsahoy.com/robots.txt
+- type: LLMsTxt
+  url: llms/optionsahoy-com-llms.txt
+- type: LLMsTxt
+  name: llms.txt (provider-hosted)
+  url: https://optionsahoy.com/llms.txt
+- type: AgentCard
+  url: a2a/optionsahoy-com-a2a.yml
+- type: MCPServer
+  url: mcp/optionsahoy-com-mcp.yml
+- type: ToolCrosswalk
+  url: mcp/optionsahoy-com-tool-crosswalk.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: Packages
+  url: packages/optionsahoy-com-packages.yml
+- type: SDKs
+  url: packages/optionsahoy-com-packages.yml
+- type: Conventions
+  url: conventions/optionsahoy-com-conventions.yml
+- type: Idempotency
+  url: conventions/optionsahoy-com-conventions.yml
+- type: ErrorCatalog
+  url: errors/optionsahoy-com-problem-types.yml
+- type: DataModel
+  url: data-model/optionsahoy-com-data-model.yml
+- type: Overlay
+  url: overlays/optionsahoy-com-openapi-overlay.yaml
+- type: Conformance
+  url: conformance/optionsahoy-com-conformance.yml
+- type: Lifecycle
+  url: lifecycle/optionsahoy-com-lifecycle.yml
+- type: ChangeLog
+  url: changelog/optionsahoy-com-changelog.yml
+- type: ChangeLog
+  name: Recently shipped (provider-hosted)
+  url: https://optionsahoy.com/for-agents
+- type: Plans
+  url: plans/optionsahoy-com-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/optionsahoy-com-rate-limits.yml
+- type: Sandbox
+  url: sandbox/optionsahoy-com-sandbox.yml
+- type: Playground
+  url: https://optionsahoy.com/for-agents#try-it
+- type: Components
+  url: components/optionsahoy-com-components.yml
+- type: Subprocessors
+  url: https://optionsahoy.com/privacy
+- type: DataSubjectRequest
+  url: https://optionsahoy.com/privacy
+- type: Authentication
+  url: authentication/optionsahoy-com-authentication.yml
+- type: Security
+  url: security/optionsahoy-com-vulnerability-disclosure.yml
+x-enrichment:
+  date: '2026-09-19'
+  status: enriched
+  artifacts_added: 36
+  pass: local-v3

@@ -1,0 +1,38 @@
+generated: '2026-09-19'
+method: searched
+source: https://optionsahoy.com/for-agents
+docs:
+- https://optionsahoy.com/privacy
+- https://optionsahoy.com/openapi.json
+limit_count: 0
+summary: >-
+  No rate limits are published for the REST API, the MCP server or the A2A endpoint. The contract declares no
+  429 response, no RateLimit/X-RateLimit headers and no Retry-After; the for-agents page, llms.txt,
+  llms-full.txt, AGENTS.md and the repository README say nothing about request quotas. The only statement
+  that limiting exists at all is in the privacy policy — the server stores a hash of the caller's IP so it
+  can "rate limit abusive traffic without keeping the address itself", and scenario-email sends are limited
+  per address — with no number, window or signal attached. Live responses (GET /api/v1 200, POST /api/v1/qsbs
+  400, MCP initialize 200) carried no rate-limit headers. An honest zero: an agent has no way to know a limit
+  before it hits one, and no documented signal when it does.
+rate_limits: []
+observed_headers:
+  fetched: '2026-09-19'
+  requests:
+  - {url: 'GET https://optionsahoy.com/api/v1', status: 200, rate_limit_headers: []}
+  - {url: 'POST https://optionsahoy.com/api/v1/qsbs', status: 400, rate_limit_headers: []}
+  - {url: 'POST https://optionsahoy.com/mcp (initialize)', status: 200, rate_limit_headers: []}
+  note: Only Cloudflare edge headers (cf-ray, cf-cache-status) and CORS headers were present.
+statements_found:
+- source: https://optionsahoy.com/privacy
+  quote: 'the hash lets us rate limit abusive traffic without keeping the address itself'
+  note: Confirms abuse limiting exists at the edge; publishes no threshold.
+- source: https://optionsahoy.com/privacy
+  quote: 'kept so we can honor rate limits and deletion requests'
+  note: Refers to scenario-email sends, not API calls.
+caching:
+- {operation: stats, note: 'Cached 60 seconds at the edge (per the contract).'}
+- {operation: badge, note: 'Cached 5 minutes at the edge (per the contract).'}
+exhaustion:
+  status: undocumented
+  headers: []
+  note: 429 is not declared in the contract and was not observed.

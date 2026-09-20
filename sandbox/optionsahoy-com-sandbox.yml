@@ -1,0 +1,47 @@
+generated: '2026-09-19'
+method: searched
+source: https://optionsahoy.com/for-agents
+docs:
+- https://optionsahoy.com/for-agents/api
+- https://optionsahoy.com/openapi.json
+- https://optionsahoy.com/tools
+summary: >-
+  OptionsAhoy has no separate sandbox, test mode or test keys, and does not need one: the production API is
+  free, keyless and side-effect free, so production IS the sandbox. What the provider publishes instead is a
+  live interactive playground on the developer page ("Try it on the live API — pick a tool, edit the JSON on
+  the left, and click Run"), a browsable reference whose request/response examples are generated from the
+  live spec and re-run against the engine, eight verbatim example request bodies inside the OpenAPI, the
+  in-browser calculators that run the same engine client-side, and third-party demos (a Hugging Face Space
+  and a Poe bot) wired to the same endpoints.
+test_vs_live:
+  separate_environment: false
+  key_prefixes: not applicable — no keys
+  note: One host, one engine. "Every endpoint under /api/v1/* is wired to the same engine an MCP tool call lands on, so the response your agent would receive is byte-identical to what you see here."
+playground:
+  url: https://optionsahoy.com/for-agents#try-it
+  kind: interactive request editor posting to the production /api/v1/* endpoints
+  presets: ['Realistic (ticker) — ticker-based inputs that resolve growth and volatility from market data', 'Canonical (ticker-less)']
+  privacy_note: 'The privacy policy discloses that "The interactive API playground on our For Agents page posts whatever text you put in its input box to our public API."'
+reference_with_live_examples:
+  url: https://optionsahoy.com/for-agents/api
+  note: 'Per the page: "The request and response examples are generated from the live OpenAPI 3.1 spec (v 1.10.1) - each response is the actual output the engine returns for the request shown, so nothing here can drift from the API."'
+fixtures:
+  openapi_request_examples:
+    source: openapi/optionsahoy-com-openapi.json (requestBody.content.application/json.example on each calculator)
+    count: 8
+    verbatim_example:
+      operation: optimizeAmtIso
+      body: {shares: 10000, strike: 2, fmv: 200, expectedGrowth: 0.15, volatility: 0.5, filingStatus: married_joint, ordinaryIncome: 400000, stateCode: CA, carryforwardCredit: 0, horizon: 4, cashReturnRate: 0.05, grantDate: '2022-01-15', hasLeftCompany: false, terminationDate: null}
+      expected_headline: 'schedules.optimized.nfv 713965.67 (the response example in the spec and on the reference page)'
+  verification_case:
+    source: https://optionsahoy.com/verification
+    note: The verification page posts a fixed ISO case (4,000 shares, strike 1, FMV 60, single, $300k income, CA, horizon 2) to POST /api/v1/amt-iso on every page load and shows the live answer beside the plotted optimum.
+  covered_tickers:
+    count: 90
+    source: 'GET https://optionsahoy.com/mcp descriptor coveredTickers[] (AAPL ... ZS) and the covered-tickers MCP resource'
+    note: Passing a covered ticker resolves growth and volatility, so an agent can exercise the API without inventing either.
+demos:
+- {name: Hugging Face Space, url: 'https://huggingface.co/spaces/AlphaLatitude/iso-tax-ai-vs-optimizer', note: 'Recomputes the optimum live from the keyless optimizer; includes a tab to run your own inputs.'}
+- {name: Poe bot, url: 'https://poe.com/OptionsAhoy'}
+- {name: Agent demo video, url: 'https://optionsahoy.com/demo'}
+- {name: In-browser calculators, url: 'https://optionsahoy.com/tools', note: 'Same engine, client-side; URL-shareable inputs.'}

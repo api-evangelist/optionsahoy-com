@@ -1,0 +1,32 @@
+generated: '2026-09-19'
+method: searched
+source: https://optionsahoy.com/for-agents
+secondary_source: https://api.github.com/repos/AlvisoOculus/optionsahoy-mcp/releases
+description: >-
+  Structured capture of the provider's dated, caller-facing change list ("Recently shipped" on the for-agents
+  page, which says "Changes a caller can see, newest first. Internal work is left out.") merged with the
+  tagged GitHub releases of the open-source server. Recent window only; the live page and the releases feed
+  are the source of truth.
+versioning:
+  scheme: semver on the server/packages; /api/v1 on the REST path
+  current: 1.10.2
+  current_release_date: '2026-09-07'
+  npm_released: '2026-09-15'
+  detail: lifecycle/optionsahoy-com-lifecycle.yml
+entries:
+- {date: '2026-09-07', version: v1.10.2, source: github-release, highlights: ['Release v1.10.2 with the optionsahoy.mcpb Claude Desktop bundle; npm 1.10.2 followed on 2026-09-15.']}
+- {date: '2026-08-26', source: for-agents, highlights: ['Content Security Policy now deny-by-default with hashed inline styles; MDN HTTP Observatory grades the site A+ (125/100).']}
+- {date: '2026-08-25', source: for-agents, highlights: ['Third-party scanner results (Blacklight, Webbkoll, HTTP Observatory) verified clean and displayed on every calculator page.', 'Removed headers that reported network errors to a third party; Webbkoll shows zero failed checks.']}
+- {date: '2026-08-07', source: for-agents, highlights: ['Tool results now carry a next_steps block with a link back to the matching calculator.']}
+- {date: '2026-08-05', source: for-agents, highlights: ['Scenario deep links: every result links to the free web calculator with the caller''s inputs pre-filled.']}
+- {date: '2026-08-04', source: for-agents, highlights: ['Agent-to-agent (A2A) interop covers the task lifecycle and conversational fallback that real clients call.']}
+- {date: '2026-08-03', version: v1.10.1, source: github-release, highlights: ['Monthly registry-freshness release.']}
+- {date: '2026-07-28', source: for-agents, highlights: ['Listed in the ChatGPT plugin (connector) directory.']}
+- {date: '2026-07-26', source: for-agents, additions: ['New calculator: which vested RSU lots to sell and in what order (rsu_lot_optimize / POST /api/v1/rsu-lot-order).']}
+- {date: '2026-07-19', version: v1.9.8, source: both, highlights: ['Structured outputs on every tool (outputSchema + structuredContent).', 'MCP adoption audit release.']}
+- {date: '2026-07-10', version: v1.9.7, source: github-release, highlights: ['Agent-surface audit; new SDK adapters (PyPI optionsahoy, optionsahoy-langchain; npm optionsahoy-ai-sdk released the same day).']}
+- {date: '2026-06-16', version: v1.9.4, source: both, highlights: ['Every federal case reproduces to the cent against PSL Tax-Calculator, state cases against OpenTaxSolver, headline answer fetched live from the production API.']}
+- {date: '2026-06-11', version: v1.9.2, source: both, highlights: ['Claude Desktop extension (.mcpb) and Gemini CLI extension.', 'llms-full.txt: the complete agent-facing API reference in one fetch.', 'Structured outputs + registry auto-listing.']}
+- {date: '2026-06-09', version: v1.9.0, source: both, highlights: ['First release to npm, with SLSA build provenance.']}
+- {date: '2026-05-31', version: v1.5.0, source: github-release, breaking: ['Renamed house_funding_plan to equity_funding_plan.'], highlights: ['v1.4.0 added the house_funding_plan tool; v1.6.0 price-drift modeling; v1.7.0 multi-stack input — all the same day.']}
+- {date: '2026-05-26', source: mcp-registry, highlights: ['First listing in the Official MCP Registry (io.github.AlvisoOculus/optionsahoy-mcp 1.0.0); repository created the same day.']}

@@ -1,0 +1,190 @@
+generated: '2026-09-19'
+method: probed
+source: >-
+  Live GET probes of the named /.well-known/* path list on every host the record knows — optionsahoy.com
+  (website, OpenAPI servers[], MCP server and A2A host), www.optionsahoy.com, api.optionsahoy.com (a second
+  provider host named in the site's Content-Security-Policy connect-src and answering a JSON endpoint index),
+  and the parent company's alphalatitude.com / www.alphalatitude.com — on 2026-09-19. Every row is a request
+  that was actually issued; every status is the one returned.
+summary:
+  hosts_probed: 5
+  documents_served: 6
+  hit_count: 6
+  path_echo_control: passed
+  note: >-
+    optionsahoy.com serves a real RFC 9116 security.txt (Contact, Preferred-Languages, Canonical, Expires;
+    no Policy line), the A2A agent card at both the canonical and legacy paths, a provider-authored
+    /.well-known/mcp.json discovery manifest, and a /.well-known/openapi.json that is a 255-byte discovery
+    HINT ({"openapi_url": "https://optionsahoy.com/openapi.json", ...}) rather than the spec itself.
+    api.optionsahoy.com serves its own security.txt with a Policy line whose target
+    (https://optionsahoy.com/security-policy) returns 404. Every other named path — OIDC and OAuth discovery
+    (including RFC 9728 protected-resource metadata for the MCP host, which is the apex), RFC 9727
+    api-catalog, ai-plugin, UCP/ACP, AAuth, APIs.json at all three locations — misses. Misses on the apex are
+    Next.js HTML 404 pages returned WITH status 404 (29,609 bytes), misses on api.optionsahoy.com are
+    {"error":"Not Found"} (21 bytes), and misses on alphalatitude.com are empty 404s; a negative-control path
+    that cannot exist 404s on every host, so no host is a catch-all and every 200 above is a served document.
+hosts:
+- host: optionsahoy.com
+  role: Website, API (OpenAPI servers[]), MCP server and A2A JSON-RPC host — one Cloudflare Pages origin
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    content_type: text/plain; charset=utf-8
+    bytes: 155
+    file: optionsahoy-com-security.txt
+    standard: RFC 9116
+    fields: [Contact, Preferred-Languages, Canonical, Expires]
+    note: 'Contact mailto:security@optionsahoy.com; Expires 2027-05-16; Canonical points at itself. No Policy, Encryption or Acknowledgments line.'
+  - path: /.well-known/agent-card.json
+    status: 200
+    content_type: application/json
+    bytes: 5042
+    file: ../a2a/optionsahoy-com-agent-card.json
+    standard: A2A Agent Card (protocolVersion 0.3.0)
+    note: Saved verbatim under a2a/ and graded in a2a/optionsahoy-com-a2a.yml (conformant).
+  - path: /.well-known/agent.json
+    status: 200
+    content_type: application/json
+    bytes: 5042
+    file: ../a2a/optionsahoy-com-agent-card.json
+    note: Legacy pre-0.3 agent-card path; byte-identical to the canonical card, so not saved twice.
+  - path: /.well-known/mcp.json
+    status: 200
+    content_type: application/json
+    bytes: 714
+    file: optionsahoy-com-mcp.json
+    note: Provider-authored MCP discovery manifest (mcp_url, transport http, protocolVersion 2024-11-05, links to toolspec/openapi/llms/documentation). Not a standardized document; recorded because it is real and the provider's own llms.txt advertises it.
+  - path: /.well-known/openapi.json
+    status: 200
+    content_type: application/json
+    bytes: 255
+    file: optionsahoy-com-openapi-discovery.json
+    note: 'NOT an OpenAPI document — a discovery hint {"openapi_url": "https://optionsahoy.com/openapi.json", ...}. The real 268 KB OpenAPI 3.1.0 is at /openapi.json and saved under openapi/.'
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    note: This is also the MCP resource host (https://optionsahoy.com/mcp); no RFC 9728 metadata is served, consistent with a server that requires no authorization.
+  - path: /.well-known/oauth-protected-resource/mcp
+    status: 404
+  - path: /mcp/.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/api-catalog.json
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    note: The provider says it is listed in the ChatGPT connector directory; that listing does not use an ai-plugin manifest.
+  - path: /.well-known/ucp.json
+    status: 404
+  - path: /.well-known/acp.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/apis.json
+    status: 404
+  - path: /apis.json
+    status: 404
+  - path: /apis.yml
+    status: 404
+  - path: /.well-known/llms.txt
+    status: 404
+    note: llms.txt lives at the site root (/llms.txt, 200) per the llmstxt.org convention; saved under llms/.
+  - path: /.well-known/apievangelist-negative-control-7f3a9c.json
+    status: 404
+    control: negative
+    note: A path that cannot exist. Its 404 (an HTML 404 page with a 404 status, same as every other miss) proves the host does not echo or catch-all /.well-known/* requests.
+- host: www.optionsahoy.com
+  role: Alias — 301 to the apex for every path
+  documents:
+  - {path: /.well-known/security.txt, status: 301, redirect: 'https://optionsahoy.com/.well-known/security.txt'}
+  - {path: /.well-known/agent-card.json, status: 301, redirect: 'https://optionsahoy.com/.well-known/agent-card.json'}
+  - {path: /.well-known/agent.json, status: 301}
+  - {path: /.well-known/mcp.json, status: 301}
+  - {path: /.well-known/openapi.json, status: 301}
+  - {path: /.well-known/openid-configuration, status: 301}
+  - {path: /.well-known/oauth-authorization-server, status: 301}
+  - {path: /.well-known/oauth-protected-resource, status: 301}
+  - {path: /.well-known/api-catalog, status: 301}
+  - {path: /.well-known/api-catalog.json, status: 301}
+  - {path: /.well-known/ai-plugin.json, status: 301}
+  - {path: /.well-known/ucp.json, status: 301}
+  - {path: /.well-known/acp.json, status: 301}
+  - {path: /.well-known/aauth-resource.json, status: 301}
+  - {path: /.well-known/apis.json, status: 301}
+  - {path: /apis.json, status: 301}
+  - {path: /apis.yml, status: 301}
+- host: api.optionsahoy.com
+  role: >-
+    A second provider host (Cloudflare-fronted, Helmet-style headers, HSTS preload) whose root returns a JSON
+    index for "OptionsAhoy API" 1.0.0 — stock-price, option-chain, ticker-search, tax/calculate, optimize and
+    projection endpoints backing the invite-only OptionsAhoy beta platform. No OpenAPI, no docs and no
+    agent surface were found on it (/openapi.json, /api/v1, /mcp and /a2a all 404), so it is recorded here
+    as a host and not registered as a public API.
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    content_type: text/plain; charset=utf-8
+    bytes: 147
+    file: optionsahoy-com-api-security.txt
+    standard: RFC 9116
+    fields: [Contact, Preferred-Languages, Policy, Expires]
+    note: 'Same Contact as the apex. Carries Policy: https://optionsahoy.com/security-policy, which returns 404 (probed 2026-09-19). Expires is generated per request (2027-09-19T22:19:51Z on this fetch), which means the document is dynamic.'
+  - {path: /.well-known/agent-card.json, status: 404}
+  - {path: /.well-known/agent.json, status: 404}
+  - {path: /.well-known/openid-configuration, status: 404}
+  - {path: /.well-known/oauth-authorization-server, status: 404}
+  - {path: /.well-known/oauth-protected-resource, status: 404}
+  - {path: /.well-known/api-catalog, status: 404}
+  - {path: /.well-known/api-catalog.json, status: 404}
+  - {path: /.well-known/ai-plugin.json, status: 404}
+  - {path: /.well-known/ucp.json, status: 404}
+  - {path: /.well-known/acp.json, status: 404}
+  - {path: /.well-known/aauth-resource.json, status: 404}
+  - {path: /.well-known/apis.json, status: 404}
+  - {path: /apis.json, status: 404}
+  - {path: /apis.yml, status: 404}
+  - {path: /.well-known/mcp.json, status: 404}
+  - {path: /openapi.json, status: 404}
+  - {path: /health, status: 200, note: '{"status":"ok", ...} liveness endpoint; not a well-known document.'}
+  - {path: /.well-known/optionsahoy-com-negative-control-3b9e1f.json, status: 404, control: negative}
+- host: alphalatitude.com
+  role: Parent company website (AlphaLatitude Inc., Sunnyvale, California) — a static page; every probed path returns an empty 404
+  documents:
+  - {path: /.well-known/security.txt, status: 404}
+  - {path: /.well-known/agent-card.json, status: 404}
+  - {path: /.well-known/agent.json, status: 404}
+  - {path: /.well-known/openid-configuration, status: 404}
+  - {path: /.well-known/oauth-authorization-server, status: 404}
+  - {path: /.well-known/oauth-protected-resource, status: 404}
+  - {path: /.well-known/api-catalog, status: 404}
+  - {path: /.well-known/api-catalog.json, status: 404}
+  - {path: /.well-known/ai-plugin.json, status: 404}
+  - {path: /.well-known/ucp.json, status: 404}
+  - {path: /.well-known/acp.json, status: 404}
+  - {path: /.well-known/aauth-resource.json, status: 404}
+  - {path: /.well-known/apis.json, status: 404}
+  - {path: /apis.json, status: 404}
+  - {path: /apis.yml, status: 404}
+  - {path: /.well-known/mcp.json, status: 404}
+  - {path: /.well-known/apievangelist-negative-control-7f3a9c.json, status: 404, control: negative}
+- host: www.alphalatitude.com
+  role: Parent company alias — every probed path returns an empty 404 (no redirect to the apex)
+  documents:
+  - {path: /.well-known/security.txt, status: 404}
+  - {path: /.well-known/agent-card.json, status: 404}
+  - {path: /.well-known/agent.json, status: 404}
+  - {path: /.well-known/openid-configuration, status: 404}
+  - {path: /.well-known/oauth-authorization-server, status: 404}
+  - {path: /.well-known/oauth-protected-resource, status: 404}
+  - {path: /.well-known/api-catalog, status: 404}
+  - {path: /.well-known/ai-plugin.json, status: 404}
+  - {path: /.well-known/ucp.json, status: 404}
+  - {path: /.well-known/acp.json, status: 404}
+  - {path: /.well-known/aauth-resource.json, status: 404}
+  - {path: /.well-known/apis.json, status: 404}
+  - {path: /apis.json, status: 404}
+  - {path: /apis.yml, status: 404}

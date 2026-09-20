@@ -1,0 +1,149 @@
+generated: '2026-09-19'
+method: searched
+source: >-
+  Registry metadata read live on 2026-09-19 from registry.npmjs.org/<pkg> and pypi.org/pypi/<pkg>/json, plus
+  the provider's for-agents page (https://optionsahoy.com/for-agents), llms.txt and the source repository
+  https://github.com/AlvisoOculus/optionsahoy-mcp (integrations/). Every package below is first-party: npm
+  maintainer "optionsahoy", PyPI author "AlphaLatitude Inc.", repository under the provider's GitHub account,
+  homepage https://optionsahoy.com/for-agents.
+package_count: 13
+official_count: 13
+packages:
+- language: javascript
+  registry: npm
+  name: optionsahoy-mcp
+  kind: mcp-server (stdio) + REST client
+  url: https://www.npmjs.com/package/optionsahoy-mcp
+  install: npx -y optionsahoy-mcp
+  version: 1.10.2
+  published: '2026-09-15'
+  license: MIT
+  official: true
+  provenance: 'Build provenance verified: registry.npmjs.org/-/npm/v1/attestations/optionsahoy-mcp@1.10.2 returns two attestations (predicate types github.com/npm/attestation/.../specs/publish/v0.1 and https://slsa.dev/provenance/v1).'
+  repository: https://github.com/AlvisoOculus/optionsahoy-mcp
+  note: 'bin optionsahoy-mcp -> dist/stdio-server.js; Node >= 20; no environment variables. The same server as https://optionsahoy.com/mcp.'
+- language: javascript
+  registry: npm
+  name: optionsahoy-ai-sdk
+  kind: Vercel AI SDK tool set
+  url: https://www.npmjs.com/package/optionsahoy-ai-sdk
+  install: npm install optionsahoy-ai-sdk
+  version: 0.1.0
+  published: '2026-07-10'
+  license: MIT
+  official: true
+  repository: https://github.com/AlvisoOculus/optionsahoy-mcp/tree/main/integrations/js/optionsahoy-ai-sdk
+- language: python
+  registry: pypi
+  name: optionsahoy
+  kind: REST client
+  url: https://pypi.org/project/optionsahoy/
+  install: pip install optionsahoy
+  version: 0.1.8
+  published: '2026-07-10'
+  license: MIT
+  official: true
+  changelog: https://github.com/AlvisoOculus/optionsahoy-mcp/blob/main/integrations/python/optionsahoy/CHANGELOG.md
+  note: '"Thin Python client for the OptionsAhoy keyless public equity-compensation REST API." from optionsahoy import OptionsAhoyClient.'
+- language: python
+  registry: pypi
+  name: optionsahoy-langchain
+  kind: LangChain tools
+  url: https://pypi.org/project/optionsahoy-langchain/
+  install: pip install optionsahoy-langchain
+  version: 0.1.8
+  published: '2026-07-10'
+  license: MIT
+  official: true
+  note: from langchain_optionsahoy import get_optionsahoy_tools
+- language: python
+  registry: pypi
+  name: optionsahoy-pydantic-ai
+  kind: Pydantic AI tools
+  url: https://pypi.org/project/optionsahoy-pydantic-ai/
+  install: pip install optionsahoy-pydantic-ai
+  version: 0.1.8
+  published: '2026-07-19'
+  license: MIT
+  official: true
+- language: python
+  registry: pypi
+  name: optionsahoy-openai-agents
+  kind: OpenAI Agents SDK tools
+  url: https://pypi.org/project/optionsahoy-openai-agents/
+  install: pip install optionsahoy-openai-agents
+  version: 0.1.8
+  published: '2026-07-19'
+  license: MIT
+  official: true
+- language: python
+  registry: none
+  name: llama-index-tools-optionsahoy
+  kind: LlamaIndex ToolSpec
+  url: https://github.com/AlvisoOculus/optionsahoy-mcp/tree/main/integrations/python/llama-index-tools-optionsahoy
+  install: pip install llama-index-tools-optionsahoy
+  version: null
+  published: null
+  official: true
+  note: 'The for-agents page documents this install line and the source directory exists in the repo, but https://pypi.org/pypi/llama-index-tools-optionsahoy/json returned 404 on 2026-09-19 — not yet on PyPI, so the documented pip install does not resolve.'
+- language: python
+  registry: none
+  name: crewai-optionsahoy
+  kind: CrewAI tools
+  url: https://github.com/AlvisoOculus/optionsahoy-mcp/tree/main/integrations/python/crewai-optionsahoy
+  version: null
+  published: null
+  official: true
+  note: Source directory in the repo; https://pypi.org/pypi/crewai-optionsahoy/json returned 404 on 2026-09-19.
+- language: python
+  registry: none
+  name: arcade-optionsahoy
+  kind: Arcade toolkit
+  url: https://github.com/AlvisoOculus/optionsahoy-mcp/tree/main/integrations/python/arcade-optionsahoy
+  version: null
+  published: null
+  official: true
+  note: Source directory in the repo; https://pypi.org/pypi/arcade-optionsahoy/json returned 404 on 2026-09-19.
+- language: bundle
+  registry: github-releases
+  name: optionsahoy.mcpb
+  kind: Claude Desktop extension bundle
+  url: https://github.com/AlvisoOculus/optionsahoy-mcp/releases/latest/download/optionsahoy.mcpb
+  install: download and double-click in Claude Desktop
+  version: v1.10.2
+  published: '2026-09-07'
+  official: true
+  note: Release asset on every GitHub release since v1.9.0 (2026-06-09); read from the GitHub releases API.
+- language: json
+  registry: github
+  name: optionsahoy (Gemini CLI extension)
+  kind: Gemini CLI extension (gemini-extension.json + GEMINI.md)
+  url: https://github.com/AlvisoOculus/optionsahoy-mcp
+  install: gemini extensions install https://github.com/AlvisoOculus/optionsahoy-mcp
+  version: null
+  published: null
+  official: true
+  note: Installed from the repo URL; versioned with the repo (latest release v1.10.2, 2026-09-07). No separate registry metadata endpoint.
+- language: json
+  registry: github
+  name: optionsahoy (Claude Code plugin)
+  kind: Claude Code plugin with an equity-plan routing skill
+  url: https://github.com/AlvisoOculus/optionsahoy-claude-plugin
+  version: 1.0.0
+  published: null
+  official: true
+  note: Version read from .claude-plugin/plugin.json; repository last pushed 2026-07-03. The skill is saved verbatim under skills/.
+- language: rust
+  registry: github
+  name: optionsahoy-zed
+  kind: Zed editor extension
+  url: https://github.com/AlvisoOculus/optionsahoy-zed
+  version: null
+  published: null
+  official: true
+  note: Cargo project with extension.toml; last pushed 2026-06-22. Not checked against the Zed extension registry.
+searched:
+- {registry: npm, query: 'https://registry.npmjs.org/-/v1/search?text=optionsahoy', result: 2 packages (both first-party)}
+- {registry: pypi, query: 'pypi.org/pypi/<name>/json for optionsahoy, optionsahoy-langchain, optionsahoy-pydantic-ai, optionsahoy-openai-agents, llama-index-tools-optionsahoy, crewai-optionsahoy, arcade-optionsahoy, optionsahoy-mcp, optionsahoy-client, alphalatitude', result: 4 on the registry, 6 absent}
+- {registry: github, query: 'https://api.github.com/search/repositories?q=optionsahoy', result: 3 repositories, all under AlvisoOculus}
+- {registry: maven-central / nuget / pkg.go.dev / rubygems / packagist / crates.io, result: not searched — the provider documents no Java, .NET, Go, Ruby, PHP or Rust client, and the repo contains none}

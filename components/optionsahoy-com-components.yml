@@ -1,0 +1,37 @@
+generated: '2026-09-19'
+method: searched
+source: https://optionsahoy.com/mcp
+docs:
+- https://optionsahoy.com/for-agents
+- https://optionsahoy.com/openapi.json
+summary: >-
+  OptionsAhoy ships no JavaScript element library, but it does publish three embeddable client-side surfaces
+  that are distinct from its SDKs: an MCP UI widget resource for chat clients that render Apps-SDK widgets, a
+  shields.io badge endpoint, and scenario deep links that open a pre-filled calculator. Recorded because an
+  integrator embeds them rather than calls them.
+families:
+- family: MCP UI widget (Apps SDK / skybridge)
+  components:
+  - name: optionsahoy-scenario
+    uri: ui://widget/optionsahoy-scenario.html
+    mime_type: text/html+skybridge
+    source: resources/list on https://optionsahoy.com/mcp (2026-09-19)
+    description: An HTML widget resource served by the MCP server for clients that render tool results as interactive UI (the OpenAI Apps SDK convention). The public stats endpoint lists it among the most-called resources (1,014 calls in the topTools sample on 2026-09-19), so it is in live use.
+    loader: served through MCP resources/read; no script tag
+- family: Badges
+  components:
+  - name: usage badge
+    url: https://optionsahoy.com/api/v1/badge?metric=calls30d
+    render: https://img.shields.io/endpoint?url=https%3A%2F%2Foptionsahoy.com%2Fapi%2Fv1%2Fbadge%3Fmetric%3Dcalls30d
+    source: openapi/optionsahoy-com-openapi.json#badge
+    description: shields.io endpoint-badge JSON (schemaVersion 1) for live MCP usage; always 200 (grey n/a when stats are unconfigured); cached 5 minutes.
+- family: Scenario deep links
+  components:
+  - name: pre-filled calculator links
+    example: https://optionsahoy.com/tools/amt-iso?shares=50000&strike=4&fmv=90&filing=married_joint&income=300000&state=CA&horizon=4
+    source: https://optionsahoy.com/ (home page example) and the for-agents changelog entry of 2026-08-05
+    description: Every API/MCP result's next_steps.web_tool links to the free web calculator with the caller's own inputs already filled in, so an agent can hand a user a working interactive view rather than a summary. Calculator state is URL-shareable (inputs in the fragment).
+not_found:
+- Web components / element libraries
+- Embedded dashboards or hosted checkout-style surfaces
+- schema.org JSON-LD (claimed on tool pages; not present in the server-rendered HTML — see conformance/)

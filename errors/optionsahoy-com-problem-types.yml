@@ -1,0 +1,65 @@
+generated: '2026-09-19'
+method: derived
+source: openapi/optionsahoy-com-openapi.json
+probed: true
+docs: https://optionsahoy.com/for-agents/api
+format: json-error-object
+envelope:
+  media_type: application/json
+  success_shape: '{"ok": true, "result": {...}, "next_steps"?: {"web_tool", "also_run", "beta"}}'
+  fields:
+  - name: error
+    declared: true
+    description: 'Human-readable string naming the specific field or condition, for example: Invalid input: field acquisitionDate must be an ISO date string like 2028-06-30.'
+  - name: code
+    declared: false
+    description: Machine-readable class observed on the live 400 ("invalid_input") but absent from the contract's BadRequest schema. Recorded in overlays/optionsahoy-com-openapi-overlay.yaml.
+  observed:
+  - {status: 400, url: 'POST https://optionsahoy.com/api/v1/qsbs', body: '{}', response: '{"error":"Invalid input: field \"acquisitionDate\" must be an ISO date string like \"2028-06-30\"","code":"invalid_input"}', fetched: '2026-09-19', note: 'The first missing required field is named; validation stops at the first failure.'}
+  - {status: 404, url: 'GET https://optionsahoy.com/api/v1/openapi.json', response: 'empty body, no content-type', note: 'Unknown routes under /api/v1 return an empty 404 rather than the JSON envelope.'}
+  - {status: 404, url: 'GET https://optionsahoy.com/docs', response: 'Next.js HTML 404 page (29,609 bytes) with a 404 status', note: 'Unknown site paths, including /.well-known/* misses, return HTML with a real 404 status — not a soft 404.'}
+  - {status: 200, url: 'POST https://optionsahoy.com/a2a', body: '{"jsonrpc":"2.0","id":1,"method":"message/send","params":{}}', response: '{"jsonrpc":"2.0","id":1,"error":{"code":-32602,"message":"Invalid params: expected params.message.parts to be an array."}}', note: 'JSON-RPC surfaces (/mcp, /a2a) use JSON-RPC 2.0 error objects, not the REST envelope.'}
+  note: >-
+    Not RFC 9457. No type URI, no title/status/instance, no error-code registry published. The provider's
+    stated contract for bad input is behavioural rather than a catalog: "unusual or out-of-range inputs are
+    caught and reported with the specific field flagged, never a silent wrong number" and "bad inputs return a
+    clear 400 with the offending field named, never a crash or a wrong number" (README). The MCP server's
+    instructions add the failure mode that matters most for an agent: "An omitted required field returns an
+    error naming that field; a fabricated one returns nothing."
+problem_types:
+- status: 400
+  title: Invalid input or calculation failure
+  component: '#/components/responses/BadRequest'
+  occurrences: 8
+  source_operations: [optimizeAmtIso, calculateNso, calculateRsu, calculateConcentration, priceProtectivePut, checkQsbs, planEquityFunding, optimizeRsuLotOrder]
+  causes:
+  - A required field is missing or malformed (the error names the field and the expected shape).
+  - A growth/return/sale-price or volatility field was neither supplied, resolved by a covered ticker, nor set to the "market" sentinel ("required-field error naming the field").
+  - An enum value outside the declared set (filingStatus is exactly single | married_joint | head_household; QSBS enums accept "unsure" where the schema says so).
+  - A calculation failure for the given inputs.
+  remediation: Fix the named field and resend; the call is stateless and idempotent so a retry has no side effect. Do not invent a value for the named field — ask the user.
+- status: 405
+  title: Method not allowed
+  component: '#/components/responses/MethodNotAllowed'
+  occurrences: 10
+  source_operations: [optimizeAmtIso, calculateNso, calculateRsu, calculateConcentration, priceProtectivePut, checkQsbs, planEquityFunding, optimizeRsuLotOrder, stats, badge]
+  causes: ['Calculator endpoints accept only POST (and OPTIONS for CORS preflight); stats and badge accept only GET.']
+  remediation: Use POST with Content-Type application/json for calculators; GET for discovery, stats and badge.
+- status: 503
+  title: Stats binding not configured
+  occurrences: 1
+  source_operations: [stats]
+  schema: '{"error": string}'
+  remediation: Transient/deployment condition on the telemetry endpoint only; calculators are unaffected. The badge endpoint deliberately returns 200 with a grey n/a badge in the same condition.
+- status: 404
+  title: Not found
+  occurrences: 0
+  note: Not declared in the contract. Observed as an empty 404 under /api/v1 and an HTML 404 page elsewhere on the host.
+- status: 429
+  title: Too many requests
+  occurrences: 0
+  note: Not declared and not observed. The privacy policy states abusive traffic is rate-limited by hashed IP, but no limit, header or status is published — see rate-limits/optionsahoy-com-rate-limits.yml.
+json_rpc_errors:
+- {code: -32602, message: Invalid params, surface: /a2a (and MCP), observed: true}
+- {code: -32001, message: Task not found, surface: /a2a, observed: true, note: 'A2A TaskNotFoundError; the message explains the agent is synchronous and does not persist tasks.'}
+- {code: required-field error, surface: /mcp tools/call, observed: false, note: 'Per the server instructions: "An omitted required field returns an error naming that field."'}

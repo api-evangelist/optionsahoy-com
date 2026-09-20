@@ -1,0 +1,429 @@
+generated: '2026-09-19'
+method: derived
+source: openapi/optionsahoy-com-openapi.json
+docs: https://optionsahoy.com/for-agents/api
+summary: 'Derived from the 21 component schemas of the OpenAPI 3.1.0 contract. This is a STATELESS calculator API,
+  so the data model is not an entity graph with ids and ownership: there are no persisted resources, no identifiers,
+  no id-prefixes and no cross-resource references. Each of the eight calculators is a pair — one Input schema (the
+  POST body) and one Result schema (the `result` field of the {ok, result, next_steps} envelope) — and the only
+  shared structure is five value types (FilingStatus, StateCode, SectorKey, IsoDate, Ticker) referenced by $ref
+  across the inputs. Two inputs carry nested collections the caller owns (EquityFundingInput.stacks[]/lots[] and
+  RsuLotOptimizeInput.lots[] — tax lots from the user''s brokerage records). Result schemas are fully declared with
+  required fields (no additionalProperties grab-bags), which is what lets the MCP projection publish an outputSchema
+  per tool.'
+id_style:
+  format: none — no resources are created or addressable
+  prefixes: []
+value_types:
+- name: FilingStatus
+  type: string
+  description: United States federal filing status.
+  enum:
+  - single
+  - married_joint
+  - head_household
+  used_by:
+  - AmtIsoInput
+  - NsoInput
+  - RsuInput
+  - ConcentrationInput
+  - QsbsInput
+  - EquityFundingInput
+  - RsuLotOptimizeInput
+- name: StateCode
+  type: string
+  description: Two-letter United States state code (e.g. CA, NY, TX).
+  pattern: ^[A-Z]{2}$
+  used_by:
+  - AmtIsoInput
+  - NsoInput
+  - RsuInput
+  - ConcentrationInput
+  - QsbsInput
+  - EquityFundingInput
+  - RsuLotOptimizeInput
+- name: SectorKey
+  type: string
+  description: ''
+  enum:
+  - tech_software
+  - semiconductors
+  - consumer_cyclical
+  - consumer_defensive
+  - financials
+  - healthcare_biotech
+  - energy
+  - industrials
+  - communication
+  - broad_market
+  used_by:
+  - ConcentrationInput
+  - ProtectivePutInput
+- name: IsoDate
+  type: string
+  description: ISO 8601 date string (YYYY-MM-DD).
+  format: date
+  used_by:
+  - AmtIsoInput
+  - ConcentrationInput
+  - QsbsInput
+  - EquityFundingInput
+  - RsuLotOptimizeInput
+- name: Ticker
+  type: string
+  description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR
+    for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one
+  used_by:
+  - AmtIsoInput
+  - NsoInput
+  - RsuInput
+  - ConcentrationInput
+entities:
+- name: AmtIsoInput
+  kind: input
+  operation: optimizeAmtIso
+  path: POST /api/v1/amt-iso
+  mcp_tool: amt_iso_optimize
+  properties: 16
+  required:
+  - shares
+  - strike
+  - fmv
+  - filingStatus
+  - ordinaryIncome
+  - stateCode
+  - horizon
+  - grantDate
+  - hasLeftCompany
+  value_types:
+  - FilingStatus
+  - IsoDate
+  - StateCode
+  - Ticker
+  nested_collections: []
+  relationships:
+  - has_one: AmtIsoResult
+    via: response.result
+- name: AmtIsoResult
+  kind: result
+  operation: optimizeAmtIso
+  properties: 9
+  required_count: 8
+  top_level_fields:
+  - crossoverShares
+  - crossoverBargain
+  - alreadyInAmt
+  - schedules
+  - stateHasAmt
+  - bargainPerShare
+  - timing
+  - effectiveHorizon
+  - departedRecommendation
+  relationships:
+  - belongs_to: AmtIsoInput
+    via: the request body it was computed from
+- name: NsoInput
+  kind: input
+  operation: calculateNso
+  path: POST /api/v1/nso
+  mcp_tool: nso_calculate
+  properties: 14
+  required:
+  - shares
+  - strike
+  - currentPrice
+  - ordinaryIncome
+  - filingStatus
+  - stateCode
+  - stillEmployed
+  - holdYears
+  - holdFunding
+  value_types:
+  - FilingStatus
+  - StateCode
+  - Ticker
+  nested_collections: []
+  relationships:
+  - has_one: NsoResult
+    via: response.result
+- name: NsoResult
+  kind: result
+  operation: calculateNso
+  properties: 5
+  required_count: 5
+  top_level_fields:
+  - exercise
+  - bracketJump
+  - hold
+  - sellNowInvest
+  - holdMinusCashless
+  relationships:
+  - belongs_to: NsoInput
+    via: the request body it was computed from
+- name: RsuInput
+  kind: input
+  operation: calculateRsu
+  path: POST /api/v1/rsu-sell-vs-hold
+  mcp_tool: rsu_sell_vs_hold
+  properties: 12
+  required:
+  - shares
+  - currentPrice
+  - ordinaryIncome
+  - filingStatus
+  - stateCode
+  - stillEmployed
+  - holdYears
+  value_types:
+  - FilingStatus
+  - StateCode
+  - Ticker
+  nested_collections: []
+  relationships:
+  - has_one: RsuResult
+    via: response.result
+- name: RsuResult
+  kind: result
+  operation: calculateRsu
+  properties: 5
+  required_count: 5
+  top_level_fields:
+  - vest
+  - bracketJump
+  - hold
+  - sellNowInvest
+  - holdMinusSell
+  relationships:
+  - belongs_to: RsuInput
+    via: the request body it was computed from
+- name: ConcentrationInput
+  kind: input
+  operation: calculateConcentration
+  path: POST /api/v1/concentration
+  mcp_tool: concentration_analyze
+  properties: 14
+  required:
+  - positionValue
+  - costBasis
+  - acquisitionDate
+  - sector
+  - stateCode
+  - filingStatus
+  - ordinaryIncome
+  - totalAssets
+  value_types:
+  - FilingStatus
+  - IsoDate
+  - SectorKey
+  - StateCode
+  - Ticker
+  nested_collections:
+  - hedgeChoice
+  relationships:
+  - has_one: ConcentrationResult
+    via: response.result
+- name: ConcentrationResult
+  kind: result
+  operation: calculateConcentration
+  properties: 11
+  required_count: 11
+  top_level_fields:
+  - concentration
+  - riskBand
+  - isLongTermToday
+  - longTermDate
+  - daysUntilLongTerm
+  - lossExposure
+  - waitForLtInsight
+  - schedule
+  - hedging
+  - sectorContextLine
+  - advisorBenchmarkLine
+  relationships:
+  - belongs_to: ConcentrationInput
+    via: the request body it was computed from
+- name: ProtectivePutInput
+  kind: input
+  operation: priceProtectivePut
+  path: POST /api/v1/protective-put
+  mcp_tool: protective_put_price
+  properties: 9
+  required:
+  - positionValue
+  - sector
+  - protectionLevel
+  - tenorYears
+  value_types:
+  - SectorKey
+  nested_collections: []
+  relationships:
+  - has_one: ProtectivePutResult
+    via: response.result
+- name: ProtectivePutResult
+  kind: result
+  operation: priceProtectivePut
+  properties: 9
+  required_count: 9
+  top_level_fields:
+  - inputs
+  - riskFreeRate
+  - realWorldDrift
+  - barePut
+  - collar
+  - putSpread
+  - payoffTable
+  - payoffRange
+  - recommended
+  relationships:
+  - belongs_to: ProtectivePutInput
+    via: the request body it was computed from
+- name: QsbsInput
+  kind: input
+  operation: checkQsbs
+  path: POST /api/v1/qsbs
+  mcp_tool: qsbs_check
+  properties: 12
+  required:
+  - acquisitionDate
+  - saleDate
+  - entityType
+  - acquisitionMethod
+  - assetCategory
+  - industry
+  - activeBusiness
+  - adjustedBasis
+  - expectedGain
+  - stateCode
+  - ordinaryIncome
+  - filingStatus
+  value_types:
+  - FilingStatus
+  - IsoDate
+  - StateCode
+  nested_collections: []
+  relationships:
+  - has_one: QsbsResult
+    via: response.result
+- name: QsbsResult
+  kind: result
+  operation: checkQsbs
+  properties: 15
+  required_count: 13
+  top_level_fields:
+  - verdict
+  - exclusionPercent
+  - perIssuerCap
+  - tenXBasisCap
+  - applicableCap
+  - excludableGain
+  - taxableGain
+  - federalTaxSaved
+  - stateConforms
+  - stateNote
+  - cappedOverageNote
+  - holdingYears
+  - yearsUntilFullExclusion
+  - era
+  - tests
+  relationships:
+  - belongs_to: QsbsInput
+    via: the request body it was computed from
+- name: EquityFundingInput
+  kind: input
+  operation: planEquityFunding
+  path: POST /api/v1/equity-funding
+  mcp_tool: equity_funding_plan
+  properties: 12
+  required:
+  - targetAfterTax
+  - targetDate
+  - ordinaryIncome
+  - filingStatus
+  - stateCode
+  value_types:
+  - FilingStatus
+  - IsoDate
+  - StateCode
+  nested_collections:
+  - stacks
+  - lots
+  relationships:
+  - has_one: EquityFundingResult
+    via: response.result
+- name: EquityFundingResult
+  kind: result
+  operation: planEquityFunding
+  properties: 8
+  required_count: 8
+  top_level_fields:
+  - recommended
+  - lockInNow
+  - balanced
+  - holdForGrowth
+  - frontier
+  - targetAfterTax
+  - targetDateISO
+  - appliedRiskTolerance
+  relationships:
+  - belongs_to: EquityFundingInput
+    via: the request body it was computed from
+- name: RsuLotOptimizeInput
+  kind: input
+  operation: optimizeRsuLotOrder
+  path: POST /api/v1/rsu-lot-order
+  mcp_tool: rsu_lot_optimize
+  properties: 7
+  required:
+  - lots
+  - currentPrice
+  - divestFraction
+  - horizonYears
+  - ordinaryIncome
+  - filingStatus
+  - stateCode
+  value_types:
+  - FilingStatus
+  - IsoDate
+  - StateCode
+  nested_collections:
+  - lots
+  relationships:
+  - has_one: RsuLotOptimizeResult
+    via: response.result
+- name: RsuLotOptimizeResult
+  kind: result
+  operation: optimizeRsuLotOrder
+  properties: 13
+  required_count: 13
+  top_level_fields:
+  - sharesToSell
+  - totalShares
+  - totalGross
+  - totalTax
+  - totalAfterTax
+  - schedule
+  - keptUnrealizedGain
+  - carryforwardRemaining
+  - headlineAfterTaxKept
+  - headlineDeltaVsFifo
+  - attribution
+  - horizonCards
+  - deferralCallouts
+  relationships:
+  - belongs_to: RsuLotOptimizeInput
+    via: the request body it was computed from
+envelope:
+  success:
+    ok: boolean const true
+    result: one of the eight *Result schemas
+    next_steps:
+      web_tool: uri
+      also_run: string[]
+      beta: uri
+  error:
+    error: string
+    code: string (observed live, undeclared)
+cross_surface_identity:
+  note: The same Input/Result pairs are the MCP tool inputSchema/outputSchema (mcp/optionsahoy-com-mcp-tools.json)
+    and the A2A skill DataPart input; see mcp/optionsahoy-com-tool-crosswalk.yml.
+render: null

@@ -1,0 +1,4 @@
+Contact: mailto:security@optionsahoy.com
+Preferred-Languages: en
+Policy: https://optionsahoy.com/security-policy
+Expires: 2027-09-19T22:19:51.061Z

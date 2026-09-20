@@ -1,0 +1,69 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the OptionsAhoy Calculator API
+  version: 1.0.0
+extends: ../openapi/optionsahoy-com-openapi.json
+x-generated: '2026-09-19'
+x-method: generated
+x-source: >-
+  Generated from openapi/optionsahoy-com-openapi.json (OpenAPI 3.1.0, info.version 1.10.1, fetched verbatim
+  from https://optionsahoy.com/openapi.json) plus the probed and searched artifacts in this repo. Captures API
+  Evangelist annotations without mutating the provider's contract.
+actions:
+- target: $.info
+  description: Link the provider's other machine-readable and agent surfaces from the contract.
+  update:
+    x-agent-card: https://optionsahoy.com/.well-known/agent-card.json
+    x-mcp-server: https://optionsahoy.com/mcp
+    x-mcp-discovery: https://optionsahoy.com/.well-known/mcp.json
+    x-mcp-toolspec: https://optionsahoy.com/toolspec.json
+    x-a2a-endpoint: https://optionsahoy.com/a2a
+    x-llms-txt: https://optionsahoy.com/llms.txt
+    x-security-txt: https://optionsahoy.com/.well-known/security.txt
+    x-verification: https://optionsahoy.com/verification
+    x-methodology: https://optionsahoy.com/methodology
+    x-source-code: https://github.com/AlvisoOculus/optionsahoy-mcp
+    x-live-server-version: 1.10.2 (initialize serverInfo and GET /api/v1 serverVersion on 2026-09-19; the contract says 1.10.1)
+- target: $.info
+  description: Record the runtime semantics the contract implies but does not state as fields.
+  update:
+    x-authentication: none — keyless by design; no securitySchemes declared and none needed
+    x-idempotency:
+      coverage: full
+      basis: every operation is a stateless pure computation; the MCP projection of the same eight operations annotates readOnlyHint true and idempotentHint true on all of them
+    x-rate-limits: undocumented — no limits published, no RateLimit/X-RateLimit/Retry-After headers observed, 429 not declared
+    x-date-dependence: 'optimizeAmtIso, calculateConcentration, planEquityFunding and optimizeRsuLotOrder measure deadlines and holding periods from the server''s current date; the other four return the same answer on any date'
+    x-error-envelope: '{"error": string, "code"?: string} — live 400 adds a code field ("invalid_input") the contract does not declare'
+- target: $.tags
+  description: >-
+    Declare the tag the contract uses but never declares — optimizeRsuLotOrder is tagged RsuLotOptimize while
+    tags[] lists Discovery, ISO, NSO, RSU, Concentration, Hedging, QSBS and EquityFunding. Tooling that groups
+    by declared tag drops that operation.
+  update:
+  - name: RsuLotOptimize
+    description: Which vested RSU lots to sell, and when, to divest at the lowest computed tax
+- target: $.paths['/api/v1/amt-iso'].post
+  update: {x-mcp-tool: amt_iso_optimize, x-a2a-skill: amt_iso_optimize}
+- target: $.paths['/api/v1/nso'].post
+  update: {x-mcp-tool: nso_calculate, x-a2a-skill: nso_calculate}
+- target: $.paths['/api/v1/rsu-sell-vs-hold'].post
+  update: {x-mcp-tool: rsu_sell_vs_hold, x-a2a-skill: rsu_sell_vs_hold}
+- target: $.paths['/api/v1/concentration'].post
+  update: {x-mcp-tool: concentration_analyze, x-a2a-skill: concentration_analyze}
+- target: $.paths['/api/v1/protective-put'].post
+  update: {x-mcp-tool: protective_put_price, x-a2a-skill: protective_put_price}
+- target: $.paths['/api/v1/qsbs'].post
+  update: {x-mcp-tool: qsbs_check, x-a2a-skill: qsbs_check}
+- target: $.paths['/api/v1/equity-funding'].post
+  update: {x-mcp-tool: equity_funding_plan, x-a2a-skill: equity_funding_plan}
+- target: $.paths['/api/v1/rsu-lot-order'].post
+  update: {x-mcp-tool: rsu_lot_optimize, x-a2a-skill: rsu_lot_optimize}
+- target: $.components.responses.BadRequest.content['application/json'].schema.properties
+  description: The live 400 body carries a machine-readable code alongside error; observed 2026-09-19 on POST /api/v1/qsbs with an empty object.
+  update:
+    code:
+      type: string
+      description: 'Machine-readable error class observed live (e.g. "invalid_input"); not declared by the provider''s contract.'
+- target: $.paths['/api/v1/stats'].get
+  description: The 200 response shape declared in the spec matched the live body on 2026-09-19 (totalCalls, last24h, last7d, last30d, topTools, lastCallAt, asOf).
+  update: {x-observed-live: '2026-09-19'}

@@ -1,0 +1,210 @@
+generated: '2026-09-19'
+method: searched
+source: openapi/optionsahoy-com-openapi.json
+description: Recommended x-agentic-access execution contracts, classified heuristically from the OpenAPI. A governance
+  starting point for exposing this API to AI agents — review and bind audience per deployment. See research/curity/agentic-governance/.
+summary:
+  operations: 11
+  by_action_class:
+    connected: 11
+    acting: 0
+  by_consequence:
+    read: 11
+    write: 0
+    physical: 0
+  human_in_the_loop_required: 0
+operations:
+- path: /api/v1
+  method: get
+  operationId: discover
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/amt-iso
+  method: post
+  operationId: optimizeAmtIso
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    audience: null
+    token:
+      max-ttl: 3600
+    audit: none
+    x-curated:
+      was:
+        action-class: acting
+        consequence: write
+      basis: POST is a stateless pure computation; the provider's live MCP tools/list annotates the identical operation
+        (amt_iso_optimize) readOnlyHint true, idempotentHint true, destructiveHint false, openWorldHint false, and
+        SECURITY.md states 'No accounts, no authentication, no stored user data ... Inputs are not retained.' Nothing
+        is created, sent, spent or deleted.
+- path: /api/v1/nso
+  method: post
+  operationId: calculateNso
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    audience: null
+    token:
+      max-ttl: 3600
+    audit: none
+    x-curated:
+      was:
+        action-class: acting
+        consequence: write
+      basis: POST is a stateless pure computation; the provider's live MCP tools/list annotates the identical operation
+        (nso_calculate) readOnlyHint true, idempotentHint true, destructiveHint false, openWorldHint false, and
+        SECURITY.md states 'No accounts, no authentication, no stored user data ... Inputs are not retained.' Nothing
+        is created, sent, spent or deleted.
+- path: /api/v1/rsu-sell-vs-hold
+  method: post
+  operationId: calculateRsu
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    audience: null
+    token:
+      max-ttl: 3600
+    audit: none
+    x-curated:
+      was:
+        action-class: acting
+        consequence: write
+      basis: POST is a stateless pure computation; the provider's live MCP tools/list annotates the identical operation
+        (rsu_sell_vs_hold) readOnlyHint true, idempotentHint true, destructiveHint false, openWorldHint false, and
+        SECURITY.md states 'No accounts, no authentication, no stored user data ... Inputs are not retained.' Nothing
+        is created, sent, spent or deleted.
+- path: /api/v1/concentration
+  method: post
+  operationId: calculateConcentration
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    audience: null
+    token:
+      max-ttl: 3600
+    audit: none
+    x-curated:
+      was:
+        action-class: acting
+        consequence: write
+      basis: POST is a stateless pure computation; the provider's live MCP tools/list annotates the identical operation
+        (concentration_analyze) readOnlyHint true, idempotentHint true, destructiveHint false, openWorldHint false,
+        and SECURITY.md states 'No accounts, no authentication, no stored user data ... Inputs are not retained.'
+        Nothing is created, sent, spent or deleted.
+- path: /api/v1/protective-put
+  method: post
+  operationId: priceProtectivePut
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    audience: null
+    token:
+      max-ttl: 3600
+    audit: none
+    x-curated:
+      was:
+        action-class: acting
+        consequence: write
+      basis: POST is a stateless pure computation; the provider's live MCP tools/list annotates the identical operation
+        (protective_put_price) readOnlyHint true, idempotentHint true, destructiveHint false, openWorldHint false,
+        and SECURITY.md states 'No accounts, no authentication, no stored user data ... Inputs are not retained.'
+        Nothing is created, sent, spent or deleted.
+- path: /api/v1/qsbs
+  method: post
+  operationId: checkQsbs
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    audience: null
+    token:
+      max-ttl: 3600
+    audit: none
+    x-curated:
+      was:
+        action-class: acting
+        consequence: write
+      basis: POST is a stateless pure computation; the provider's live MCP tools/list annotates the identical operation
+        (qsbs_check) readOnlyHint true, idempotentHint true, destructiveHint false, openWorldHint false, and SECURITY.md
+        states 'No accounts, no authentication, no stored user data ... Inputs are not retained.' Nothing is created,
+        sent, spent or deleted.
+- path: /api/v1/equity-funding
+  method: post
+  operationId: planEquityFunding
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    audience: null
+    token:
+      max-ttl: 3600
+    audit: none
+    x-curated:
+      was:
+        action-class: acting
+        consequence: write
+      basis: POST is a stateless pure computation; the provider's live MCP tools/list annotates the identical operation
+        (equity_funding_plan) readOnlyHint true, idempotentHint true, destructiveHint false, openWorldHint false,
+        and SECURITY.md states 'No accounts, no authentication, no stored user data ... Inputs are not retained.'
+        Nothing is created, sent, spent or deleted.
+- path: /api/v1/rsu-lot-order
+  method: post
+  operationId: optimizeRsuLotOrder
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    audience: null
+    token:
+      max-ttl: 3600
+    audit: none
+    x-curated:
+      was:
+        action-class: acting
+        consequence: physical
+      basis: POST is a stateless pure computation; the provider's live MCP tools/list annotates the identical operation
+        (rsu_lot_optimize) readOnlyHint true, idempotentHint true, destructiveHint false, openWorldHint false, and
+        SECURITY.md states 'No accounts, no authentication, no stored user data ... Inputs are not retained.' Nothing
+        is created, sent, spent or deleted.
+- path: /api/v1/stats
+  method: get
+  operationId: stats
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/badge
+  method: get
+  operationId: badge
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+x-curated:
+  date: '2026-09-19'
+  by: API Evangelist enrichment pass
+  note: 'The heuristic classifier read the eight POST calculators as acting/write (planEquityFunding as physical,
+    on the ''fund''/''sell'' vocabulary). That is the wrong contract for this API: every operation is read-only
+    by the provider''s own machine-readable declaration (mcp/optionsahoy-com-mcp-tools.json annotations) and by
+    its security policy. Reclassified to connected/read with the generated values preserved under x-curated.was
+    so the change is auditable. The three GET operations were already connected/read.'
+  evidence:
+  - mcp/optionsahoy-com-mcp-tools.json — annotations.readOnlyHint true on 8 of 8 tools
+  - https://github.com/AlvisoOculus/optionsahoy-mcp/blob/main/SECURITY.md
+  - conventions/optionsahoy-com-conventions.yml — reversibility grade na, no write surface

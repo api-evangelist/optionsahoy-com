@@ -1,0 +1,34 @@
+generated: '2026-09-19'
+method: searched
+source: https://optionsahoy.com/for-agents
+docs:
+- https://optionsahoy.com/openapi.json
+- https://optionsahoy.com/terms
+- https://optionsahoy.com/llms.txt
+plan_count: 1
+currency: USD
+model: free, keyless public API and MCP server; no paid tier, no quota, no pricing page
+summary: >-
+  OptionsAhoy publishes no pricing page (/pricing 404) because the public surface is free: "Eight free
+  calculators" (OpenAPI info.description), "JSON in, JSON out, no auth required" (for-agents), "no auth, no
+  install" (llms.txt). The contract's license line states the terms of that free use — "Proprietary. Free for
+  non-commercial use during beta." — which is the only commercial constraint published, and it is stated
+  nowhere in prose beyond the spec. The company's paid product, the OptionsAhoy optimization platform, is an
+  invite-only beta governed by a separate Beta Testing & Confidentiality Agreement (Terms §3); it has no
+  published price and is not reachable through the public API.
+plans:
+- id: free
+  name: Free (public calculators, REST API, MCP server, A2A agent)
+  price: 0
+  currency: USD
+  period: n/a
+  included: Unlimited use of the eight calculators over REST, MCP and A2A with no key, account or signup; the same engine as the in-browser tools.
+  overage: none
+  limits: ['No published request quota (see rate-limits/optionsahoy-com-rate-limits.yml).', 'License in the OpenAPI: "Proprietary. Free for non-commercial use during beta." — commercial use is not addressed anywhere else on the site.']
+  source: https://optionsahoy.com/for-agents
+unpriced_products:
+- {name: OptionsAhoy beta platform, status: invite-only beta, url: 'https://optionsahoy.com/beta (302 to the home page; request-access form on the site)', note: 'Governed by a signed Beta Testing & Confidentiality Agreement; no price published.'}
+- {name: OptionsAhoy on Poe, url: 'https://poe.com/OptionsAhoy', note: '"Free during launch" per llms.txt.'}
+probed:
+- {url: 'https://optionsahoy.com/pricing', status: 404}
+- {url: 'https://optionsahoy.com/beta', status: 302, redirect: 'https://optionsahoy.com/'}

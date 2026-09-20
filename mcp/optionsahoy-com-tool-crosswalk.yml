@@ -1,0 +1,127 @@
+generated: '2026-09-19'
+method: derived
+source: >-
+  mcp/optionsahoy-com-mcp-tools.json (live tools/list, 2026-09-19) and a2a/optionsahoy-com-agent-card.json
+  (live card) bound to openapi/optionsahoy-com-openapi.json (OpenAPI 3.1.0, 11 operations, fetched from
+  https://optionsahoy.com/openapi.json). The provider states the binding itself: llms-full.txt prefixes every
+  tool with "REST equivalent: POST https://optionsahoy.com/api/v1/<path>", and the for-agents page says
+  "Every endpoint under /api/v1/* is wired to the same engine an MCP tool call lands on, so the response your
+  agent would receive is byte-identical".
+purpose: >-
+  Make the MCP tool the first-class discovery unit and bind it to its backing REST operation. OptionsAhoy is
+  the rare case where the three agent surfaces are the SAME eight calculators with the same names and the same
+  input schemas; the divergence is in what surrounds them (MCP adds resources, prompts and a widget; REST adds
+  discovery, stats and a badge; A2A adds nothing beyond the eight skills).
+surfaces:
+  openapi:
+    file: openapi/optionsahoy-com-openapi.json
+    url: https://optionsahoy.com/openapi.json
+    operations: 11
+    gated: false
+    note: Every operation carries an operationId, a summary, a description and a tag. Eight are the calculators; three are discovery/telemetry.
+  mcp:
+  - url: https://optionsahoy.com/mcp
+    gated: false
+    note: Anonymous tools/list returned 8 tools with inputSchema, outputSchema and annotations on 2026-09-19.
+  graphql: null
+  a2a:
+    url: https://optionsahoy.com/a2a
+    card: a2a/optionsahoy-com-agent-card.json
+    gated: false
+    protocol_version: '0.3.0'
+    skills: 8
+    note: Skill ids are exactly the MCP tool names; a skill is run with a DataPart {"skill":"<id>","input":{...}} whose input is the same JSON body the REST operation takes.
+crosswalk:
+- tool: amt_iso_optimize
+  surface: [mcp, a2a]
+  category: iso-amt
+  rest: [optimizeAmtIso]
+  rest_path: POST /api/v1/amt-iso
+  binding: rest
+  confidence: high
+  input_schema: components.schemas.AmtIsoInput (9 required of 16 properties)
+  output_schema: components.schemas.AmtIsoResult
+- tool: nso_calculate
+  surface: [mcp, a2a]
+  category: nso
+  rest: [calculateNso]
+  rest_path: POST /api/v1/nso
+  binding: rest
+  confidence: high
+  input_schema: components.schemas.NsoInput (9 required of 14)
+  output_schema: components.schemas.NsoResult
+- tool: rsu_sell_vs_hold
+  surface: [mcp, a2a]
+  category: rsu
+  rest: [calculateRsu]
+  rest_path: POST /api/v1/rsu-sell-vs-hold
+  binding: rest
+  confidence: high
+  input_schema: components.schemas.RsuInput (7 required of 12)
+  output_schema: components.schemas.RsuResult
+- tool: concentration_analyze
+  surface: [mcp, a2a]
+  category: concentration
+  rest: [calculateConcentration]
+  rest_path: POST /api/v1/concentration
+  binding: rest
+  confidence: high
+  input_schema: components.schemas.ConcentrationInput (8 required of 14)
+  output_schema: components.schemas.ConcentrationResult
+- tool: protective_put_price
+  surface: [mcp, a2a]
+  category: hedging
+  rest: [priceProtectivePut]
+  rest_path: POST /api/v1/protective-put
+  binding: rest
+  confidence: high
+  input_schema: components.schemas.ProtectivePutInput (4 required of 9)
+  output_schema: components.schemas.ProtectivePutResult
+- tool: qsbs_check
+  surface: [mcp, a2a]
+  category: qsbs
+  rest: [checkQsbs]
+  rest_path: POST /api/v1/qsbs
+  binding: rest
+  confidence: high
+  input_schema: components.schemas.QsbsInput (12 required of 12)
+  output_schema: components.schemas.QsbsResult
+- tool: equity_funding_plan
+  surface: [mcp, a2a]
+  category: equity-funding
+  rest: [planEquityFunding]
+  rest_path: POST /api/v1/equity-funding
+  binding: rest
+  confidence: high
+  input_schema: components.schemas.EquityFundingInput (5 required of 12)
+  output_schema: components.schemas.EquityFundingResult
+- tool: rsu_lot_optimize
+  surface: [mcp, a2a]
+  category: rsu-lot-order
+  rest: [optimizeRsuLotOrder]
+  rest_path: POST /api/v1/rsu-lot-order
+  binding: rest
+  confidence: high
+  input_schema: components.schemas.RsuLotOptimizeInput (7 required of 7)
+  output_schema: components.schemas.RsuLotOptimizeResult
+  note: The REST operation is tagged RsuLotOptimize, a tag the spec's tags[] does not declare (see overlays/optionsahoy-com-openapi-overlay.yaml).
+mcp_only: []
+mcp_only_surfaces:
+- {kind: resources, count: 9, reason: 'Eight editorial/learn pages served as text/markdown plus the ui://widget/optionsahoy-scenario.html Apps-SDK widget; no REST operation returns them.'}
+- {kind: prompts, count: 8, reason: 'One prompt per calculator plus plan-equity-portfolio, a composite that sequences several tools; REST has no prompt surface.'}
+- {kind: session, reason: 'Mcp-Session-Id assigned at initialize and tools/call _meta.optionsahoy next-steps; the REST twin is the next_steps field in each response body.'}
+rest_only:
+- {operationId: discover, path: GET /api/v1, capability: discovery, note: 'Endpoint inventory; the MCP twin is tools/list and the GET descriptor on /mcp.'}
+- {operationId: stats, path: GET /api/v1/stats, capability: telemetry, note: 'Public aggregate MCP usage counts (211,760 total calls observed 2026-09-19).'}
+- {operationId: badge, path: GET /api/v1/badge, capability: telemetry, note: 'shields.io endpoint-badge JSON built from the same stats.'}
+a2a_skills:
+  note: All eight A2A skills bind 1:1 to the rows above by id; the A2A surface carries no skill that is not also an MCP tool and a REST operation.
+coverage:
+  tools_named: 8
+  tools_bound: 8
+  mcp_only: 0
+  rest_operations_total: 11
+  rest_operations_with_tool: 8
+  rest_only: 3
+  a2a_skills: 8
+  a2a_skills_bound: 8

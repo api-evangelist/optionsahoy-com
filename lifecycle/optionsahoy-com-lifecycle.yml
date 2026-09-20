@@ -1,0 +1,54 @@
+generated: '2026-09-19'
+method: searched
+source: https://optionsahoy.com/for-agents
+derived_from: openapi/optionsahoy-com-openapi.json
+docs:
+- https://optionsahoy.com/for-agents
+- https://github.com/AlvisoOculus/optionsahoy-mcp/releases
+versioning:
+  scheme: URI-path major version (/api/v1) plus semantic versioning of the server and packages
+  current_version: 'v1 (path); 1.10.2 (live server, npm optionsahoy-mcp, agent card, GitHub release v1.10.2 of 2026-09-07); 1.10.1 (OpenAPI info.version, /.well-known/mcp.json, MCP Registry latest)'
+  spec_url: https://optionsahoy.com/openapi.json
+  base_url: https://optionsahoy.com
+  policy_published: false
+  note: >-
+    The REST path carries v1 and has not changed. The server, npm package, .mcpb bundle and agent card share a
+    semver that moves with each release; the OpenAPI document and the well-known MCP manifest lag one patch
+    behind the live server on 2026-09-19. GET /api/v1 returns both ("version":"v1","serverVersion":"1.10.2").
+    No written versioning or compatibility policy exists.
+deprecation:
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  deprecated_operations: []
+  documented_breaking_changes:
+  - what: Tool/endpoint renamed house_funding_plan -> equity_funding_plan
+    version: v1.5.0
+    date: '2026-05-31'
+    evidence: 'GitHub release title "v1.5.0 — rename to equity_funding_plan (breaking)" (releases API, read 2026-09-19).'
+    note: The only change the provider has labelled breaking; it predates the first npm release (v1.9.0, 2026-06-09), so no released package was affected.
+  note: 'Zero operations carry deprecated: true. No deprecation or versioning page exists (/changelog 404). No Deprecation pointer is emitted.'
+status_page:
+  url: null
+  probed:
+  - {url: 'https://optionsahoy.com/status', status: 404}
+  - {url: 'https://status.optionsahoy.com/', status: 'no DNS / connection failed'}
+  live_signals:
+  - {url: 'https://optionsahoy.com/api/v1/stats', status: 200, observed: '{"totalCalls":211760,"last24h":3261,"last7d":23206,"last30d":84321,...,"lastCallAt":"2026-09-19T22:16:01.461Z"}', note: 'Public aggregate usage counts, cached 60 s; a liveness signal, not an incident history.'}
+  - {url: 'https://api.optionsahoy.com/health', status: 200, observed: '{"status":"ok","timestamp":"2026-09-19T22:17:44.737Z","version":{"gitCommit":"4296973"}}', note: 'Health check on the beta-platform host, not the public calculator host.'}
+  note: No status page and no uptime commitment, so no StatusPage pointer is emitted.
+sla:
+  published: false
+  note: 'No uptime or latency commitment. info.license reads "Proprietary. Free for non-commercial use during beta." and the Terms disclaim that the Site will be "uninterrupted, error-free, or secure". The security policy commits to acknowledging vulnerability reports within three business days (SECURITY.md).'
+changelog:
+  published: true
+  url: https://optionsahoy.com/for-agents
+  section: Recently shipped ("Changes a caller can see, newest first. Internal work is left out.")
+  secondary: https://github.com/AlvisoOculus/optionsahoy-mcp/releases
+  detail: changelog/optionsahoy-com-changelog.yml
+  note: A dated, caller-facing change list on the developer page plus tagged GitHub releases with notes; per-package CHANGELOG.md files exist under integrations/python/*.
+support_lifetime:
+  published: false
+release_cadence:
+  observed: '20 tagged releases between 2026-05-30 (v1.3.2) and 2026-09-07 (v1.10.2); npm 1.10.2 released 2026-09-15; repository last pushed 2026-09-18.'

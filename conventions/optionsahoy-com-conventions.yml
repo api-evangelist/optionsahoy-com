@@ -1,0 +1,112 @@
+generated: '2026-09-19'
+method: searched
+source: https://optionsahoy.com/for-agents
+derived_from: openapi/optionsahoy-com-openapi.json
+docs:
+- https://optionsahoy.com/for-agents/api
+- https://optionsahoy.com/llms.txt
+- https://github.com/AlvisoOculus/optionsahoy-mcp/blob/main/AGENTS.md
+base_url: https://optionsahoy.com
+media_type: application/json
+auth:
+  style: >-
+    None. Every surface — REST (/api/v1/*), MCP (/mcp) and A2A (/a2a) — is keyless: no API key, no OAuth, no
+    account, no signup. The OpenAPI declares no securitySchemes; the for-agents page says "No API key, no
+    OAuth"; the agent card says "OptionsAhoy's API is keyless"; SECURITY.md says "No accounts, no
+    authentication, no stored user data."
+  detail: authentication/optionsahoy-com-authentication.yml
+request_shape:
+  calculators: single JSON POST body, one object per calculator (components.schemas.*Input); Content-Type application/json; no query parameters
+  discovery: GET with no parameters (/api/v1, /api/v1/stats); GET /api/v1/badge takes ?metric=
+  cors: 'wide open — access-control-allow-origin: *; OPTIONS preflight answered 204 with max-age 86400'
+response_shape:
+  success: '{"ok": true, "result": {...}, "next_steps"?: {"web_tool": url, "also_run": [...], "beta": url}}'
+  next_steps: A constant-per-endpoint envelope naming the free interactive version of the calculator, related endpoints worth running next, and the beta; the MCP twin is tools/call _meta.optionsahoy.
+  structured_outputs: MCP tools return both a serialized JSON text block and structuredContent matching the declared outputSchema (llms-full.txt).
+idempotency:
+  supported: true
+  coverage: full
+  mechanism: stateless pure computation; every operation is declared read-only and idempotent by the provider
+  header: null
+  scope: [optimizeAmtIso, calculateNso, calculateRsu, calculateConcentration, priceProtectivePut, checkQsbs, planEquityFunding, optimizeRsuLotOrder, discover, stats, badge]
+  retention: not applicable — nothing is stored, so there is no key to retain
+  description: >-
+    There is no mutating surface. Every REST operation, including the eight POSTs, is a pure function of its
+    inputs plus the current date ("no randomness and no model inference, so a result is a pure function of
+    the inputs plus the current date" — llms.txt; "Inputs are not retained" — SECURITY.md). The provider
+    states this in machine-readable form: all eight MCP tools carry annotations readOnlyHint true,
+    idempotentHint true, destructiveHint false, openWorldHint false in the live tools/list and in the
+    published toolspec.json. A retried call therefore has no side effect and, for the four date-independent
+    calculators, returns byte-identical output; the four date-dependent ones (optimizeAmtIso,
+    calculateConcentration, planEquityFunding, optimizeRsuLotOrder) return the same output within a day and
+    drift only as the server date moves. An Idempotency-Key header would be redundant here, which is why
+    none exists. coverage is "full" because the guarantee spans 100% of the surface, not because a header
+    does.
+  evidence:
+  - mcp/optionsahoy-com-mcp-tools.json — annotations.idempotentHint true on 8 of 8 tools
+  - https://optionsahoy.com/toolspec.json — the same annotations in the static tool spec
+  - openapi/optionsahoy-com-openapi.json info.description — "a result is a pure function of the inputs plus the current date"
+dry_run_mode:
+  supported: na
+  note: >-
+    Not applicable: there is no write to rehearse. Every call is already side-effect free, and the free
+    in-browser calculators at https://optionsahoy.com/tools run the same engine client-side ("the computed
+    figures match"). The live playground on the for-agents page posts to the production API itself.
+reversibility:
+  grade: na
+  note: >-
+    Not applicable: the API is read-only. No operation creates, changes, sends, spends or deletes anything on
+    the provider's side — "The tools take inputs, compute a result, and return it" (SECURITY.md). There is no
+    write surface to reverse, so no reversal operation and no window are asserted. An honest na leaves the
+    dimension out of the denominator rather than scoring a read-only engine zero.
+  write_surfaces: []
+date_dependence:
+  server_clock_authoritative: true
+  note: >-
+    Four calculators measure a deadline or holding period from today (optimizeAmtIso, calculateConcentration,
+    planEquityFunding, optimizeRsuLotOrder); the other four are date-independent. The provider removed a
+    client-supplied `today` override from the Python client because "the REST endpoint ignores any
+    client-supplied today by design (the server clock is authoritative, a guard against stale model clocks)"
+    (optionsahoy 0.1.8 changelog). An agent cannot back-date or forward-date a calculation.
+input_discipline:
+  rule: >-
+    "Never invent an input value. Every number these tools compute on comes from the user, from a documented
+    resolver, or from a documented default, and from nothing else." (MCP initialize instructions)
+  resolvers:
+  - {name: ticker, applies_to: [optimizeAmtIso, calculateNso, calculateRsu, calculateConcentration, priceProtectivePut, planEquityFunding stacks], behaviour: 'A covered public-stock symbol (~90; list via the covered-tickers MCP resource or GET /mcp coveredTickers) resolves expected growth (trailing CAGR) and volatility (implied vol as of the last market close). A field the ticker cannot resolve falls through to a required-field error; there is no stale or estimated fallback.'}
+  - {name: '"market" sentinel', applies_to: [growth/return/sale-price fields], behaviour: 'The string "market" selects the S&P 500 trailing average — a documented deterministic default, not an invented number.'}
+  - {name: '"unsure" enum value', applies_to: [checkQsbs acquisitionMethod, assetCategory, activeBusiness], behaviour: 'Pass "unsure" when the user genuinely does not know; entityType and industry do not accept it.'}
+  documented_defaults: [cashReturnRate 0.04, carryforwardCredit 0, riskToleranceShortfall 0.10, expectedMarketReturn, cashInterestRate, spreadRiskLevel, defaultVolatility, protective-put volatility (sector-typical)]
+  enums: {filingStatus: [single, married_joint, head_household], sector: [tech_software, semiconductors, consumer_cyclical, consumer_defensive, financials, healthcare_biotech, energy, industrials, communication, broad_market], stateCode: 'two-letter US state code, pattern ^[A-Z]{2}$', dates: 'ISO 8601 YYYY-MM-DD'}
+pagination:
+  style: none
+  note: No list operations; every response is a single computed object.
+filtering_and_sorting: {supported: false}
+field_expansion: {supported: false}
+sparse_fieldsets: {supported: false}
+metadata: {supported: false}
+request_id_tracing:
+  supported: false
+  note: No request-id or correlation-id header is declared or returned. Responses carry cf-ray (Cloudflare's edge trace id), which is a platform id and not a provider contract. The MCP server assigns an mcp-session-id at initialize, which is a session handle, not a per-request trace.
+sessions:
+  mcp: 'mcp-session-id assigned in the initialize response; the server asks clients to echo it (Streamable HTTP). CORS exposes the header.'
+  rest: stateless; no cookies, no session
+versioning:
+  scheme: /api/v1 path segment; semver on the server (1.10.2)
+  header: none
+  detail: lifecycle/optionsahoy-com-lifecycle.yml
+errors:
+  envelope: '{"error": string, "code"?: string} — not RFC 9457'
+  media_type: application/json
+  statuses: {400: 'invalid input or calculation failure (field named)', 405: 'method not allowed', 503: 'stats binding not configured (stats only)'}
+  detail: errors/optionsahoy-com-problem-types.yml
+rate_limit_signaling:
+  headers: []
+  exhaustion_status: undocumented
+  detail: rate-limits/optionsahoy-com-rate-limits.yml
+privacy_of_inputs:
+  note: >-
+    The in-browser calculators keep inputs client-side; the REST/MCP/A2A endpoints necessarily receive them
+    over the network ("an agent that calls them is sending inputs over the network by design" — llms.txt).
+    SECURITY.md states inputs are not retained and telemetry records only tool name, success/error, client
+    name and country.

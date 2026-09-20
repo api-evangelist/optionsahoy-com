@@ -1,0 +1,41 @@
+generated: '2026-09-19'
+method: searched
+source: openapi/optionsahoy-com-openapi.json
+docs:
+- https://optionsahoy.com/for-agents
+- https://github.com/AlvisoOculus/optionsahoy-mcp/blob/main/SECURITY.md
+- https://github.com/AlvisoOculus/optionsahoy-mcp/blob/main/llms-install.md
+summary:
+  types: []
+  api_key_in: []
+  oauth2_flows: []
+  bearer: false
+  credential_classes: 0
+  headline: >-
+    No authentication on any surface, by design and by statement. The OpenAPI 3.1.0 contract declares no
+    securitySchemes and no security requirement; the for-agents page says "No API key, no OAuth"; llms.txt
+    says "no auth, no install"; the agent card says "OptionsAhoy's API is keyless"; SECURITY.md says "No
+    accounts, no authentication, no stored user data." The MCP server answers initialize and tools/list
+    anonymously and serves no OAuth/OIDC discovery documents (/.well-known/oauth-authorization-server,
+    /.well-known/oauth-protected-resource and /.well-known/openid-configuration all 404). This is a genuine
+    zero-credential public API, not an undocumented gate: derive-authentication.py correctly produced no
+    profile, and this file records the absence from the provider's own statements so the auth model reads as
+    "open" rather than "unknown".
+schemes: []
+surfaces:
+- {surface: REST, endpoint: 'https://optionsahoy.com/api/v1/*', auth: none, evidence: 'OpenAPI has no securitySchemes/security; live GET /api/v1 200 and POST /api/v1/qsbs 400 (validation, not 401) with no credential'}
+- {surface: MCP, endpoint: 'https://optionsahoy.com/mcp', auth: none, evidence: 'initialize/tools/list/resources/list/prompts/list all 200 anonymously; no RFC 9728 or RFC 8414 metadata on the host; CORS allows any origin'}
+- {surface: A2A, endpoint: 'https://optionsahoy.com/a2a', auth: none, evidence: 'agent card declares no securitySchemes/security; POST message/send with empty params returned a JSON-RPC -32602 validation error, not an auth challenge'}
+- {surface: stdio package, install: 'npx -y optionsahoy-mcp', auth: none, evidence: 'llms-install.md: "Requirements: Node 20 or newer. No environment variables are needed."'}
+access_controls_that_exist_instead:
+- {kind: abuse rate limiting at the edge, evidence: 'privacy policy: a hash of the caller IP is stored so the server can "rate limit abusive traffic without keeping the address itself"; no threshold published (rate-limits/optionsahoy-com-rate-limits.yml)'}
+- {kind: license terms, evidence: 'OpenAPI info.license: "Proprietary. Free for non-commercial use during beta." — a legal constraint, not a technical one'}
+- {kind: Cloudflare Turnstile, scope: 'the beta-signup and scenario-email FORMS on the website only, per the privacy policy; not the API'}
+sessions:
+  mcp: 'mcp-session-id assigned in the initialize response and echoed by the client (Streamable HTTP); a session handle, not a credential'
+mtls: false
+signed_requests: false
+note: >-
+  Because nothing authenticates the caller, an agent should treat every response as public data and treat its
+  own inputs as leaving the user's device (llms.txt: "an agent that calls them is sending inputs over the
+  network by design"); SECURITY.md states the inputs are not retained.

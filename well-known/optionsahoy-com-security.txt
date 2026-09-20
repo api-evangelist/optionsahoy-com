@@ -1,0 +1,4 @@
+Contact: mailto:security@optionsahoy.com
+Preferred-Languages: en
+Canonical: https://optionsahoy.com/.well-known/security.txt
+Expires: 2027-05-16T00:00:00Z

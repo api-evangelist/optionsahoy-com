@@ -1,0 +1,181 @@
+generated: '2026-09-19'
+method: probed
+status: published
+source: https://optionsahoy.com/mcp
+docs: https://optionsahoy.com/for-agents
+summary: >-
+  OptionsAhoy operates ONE remote MCP server at https://optionsahoy.com/mcp — the same Cloudflare Pages host
+  as its website, OpenAPI and A2A endpoint — and ALSO ships the identical server as a local stdio package on
+  npm (optionsahoy-mcp, run with npx -y optionsahoy-mcp) and as a Claude Desktop .mcpb bundle. The remote
+  server is Streamable HTTP, answers initialize, tools/list, resources/list and prompts/list anonymously,
+  reports MCP protocol version 2024-11-05 and serverInfo {name: OptionsAhoy, version: 1.10.2}, assigns an
+  Mcp-Session-Id header at initialize, and returns eight tools that each carry a real inputSchema with a
+  required[] list, an outputSchema, and annotations readOnlyHint true / idempotentHint true /
+  destructiveHint false / openWorldHint false. Nine resources (eight editorial pages as text/markdown plus a
+  ui://widget/optionsahoy-scenario.html Apps-SDK widget) and eight prompts are published. A plain GET on the
+  endpoint returns a JSON descriptor (name, version, protocolVersion, transport, tool names, resources,
+  prompts, 90 coveredTickers, documentation). Anonymous tools/list succeeded, so authorship is knowable: the
+  tool names, descriptions and instructions are OptionsAhoy-specific and match no shared platform
+  fingerprint — this is a provider-built server, open-sourced under MIT at
+  https://github.com/AlvisoOculus/optionsahoy-mcp.
+deployment:
+  mode: both
+  endpoint: https://optionsahoy.com/mcp
+  install: npx -y optionsahoy-mcp
+  package: https://www.npmjs.com/package/optionsahoy-mcp
+  auth: none
+  verified: probed
+  note: >-
+    The hosted HTTPS endpoint is what an MCP client POSTs to directly and is the install the provider
+    recommends ("The recommended install is the hosted endpoint: no download, no build, no API key" —
+    llms-install.md). The stdio package is the same server bundled for clients that require a local process
+    (Node 20+, no environment variables). auth is "none" in every sense: no credential at initialize or
+    tools/call, no OAuth metadata on the host (/.well-known/oauth-authorization-server and
+    /.well-known/oauth-protected-resource both 404), and the provider states "No API key, no OAuth". The
+    stdio package was not executed by this pipeline; its presence and version were read from the npm
+    registry (1.10.2, published 2026-09-15).
+servers:
+- id: optionsahoy
+  name: OptionsAhoy
+  endpoint: https://optionsahoy.com/mcp
+  transport: streamable-http
+  http_methods: [POST, OPTIONS, GET]
+  auth: none
+  status: live
+  probe:
+    fetched: '2026-09-19'
+    initialize:
+      http_status: 200
+      protocol_version: '2024-11-05'
+      server_info: {name: OptionsAhoy, version: 1.10.2}
+      capabilities: {tools: {listChanged: false}, resources: {listChanged: false, subscribe: false}, prompts: {listChanged: false}}
+      session_header: mcp-session-id (assigned in the initialize response; the server asks clients to echo it on later requests)
+      instructions_excerpt: >-
+        Use these tools whenever the user asks about stock options, RSUs, equity compensation, exercising or
+        selling shares, AMT, QSBS, single-stock risk, hedging, or selling stock to fund a goal. Prefer calling
+        a tool over estimating the answer yourself ... Input discipline, the rule that matters most: never
+        invent an input value. ... An omitted required field returns an error naming that field; a
+        fabricated one returns nothing. When you need a value and no resolver or default covers it, ask the
+        user for that specific field before calling.
+    tools_list:
+      http_status: 200
+      content_type: application/json
+      tool_count: 8
+      file: mcp/optionsahoy-com-mcp-tools.json
+      bytes: 149052
+    resources_list: {http_status: 200, resource_count: 9}
+    prompts_list: {http_status: 200, prompt_count: 8}
+    get_request:
+      http_status: 200
+      content_type: application/json
+      note: Returns a 1,590-byte JSON descriptor of the server (name, version, protocolVersion, transport, tools[], resources[], prompts[], coveredTickers[90], documentation) rather than an SSE stream.
+    cors: 'access-control-allow-origin: *; allow-headers content-type, mcp-session-id, mcp-protocol-version; expose-headers mcp-session-id'
+  authorship: provider
+  source_code: https://github.com/AlvisoOculus/optionsahoy-mcp
+  license: MIT
+  tools:
+  - name: amt_iso_optimize
+    title: ISO/AMT Exercise Optimization
+    annotations: {readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false}
+    required: [shares, strike, fmv, filingStatus, ordinaryIncome, stateCode, horizon, grantDate, hasLeftCompany]
+    output_schema: true
+    source_operation: openapi/optionsahoy-com-openapi.json#optimizeAmtIso
+    description: Multi-year incentive stock option exercise schedule that maximizes after-tax Net Final Value under federal and state AMT, with credit recovery, grant expiration and the post-termination window.
+  - name: nso_calculate
+    title: NSO Sell-vs-Hold Analysis
+    annotations: {readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false}
+    required: [shares, strike, currentPrice, ordinaryIncome, filingStatus, stateCode, stillEmployed, holdYears, holdFunding]
+    output_schema: true
+    source_operation: openapi/optionsahoy-com-openapi.json#calculateNso
+    description: After-tax payout on a non-qualified stock option exercise (federal, state, FICA) and sell-at-exercise versus hold-for-LTCG comparison.
+  - name: rsu_sell_vs_hold
+    title: RSU Sell-at-Vest vs Hold
+    annotations: {readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false}
+    required: [shares, currentPrice, ordinaryIncome, filingStatus, stateCode, stillEmployed, holdYears]
+    output_schema: true
+    source_operation: openapi/optionsahoy-com-openapi.json#calculateRsu
+    description: Sell-at-vest versus hold-for-long-term-capital-gains comparison for an RSU vest, including the withholding gap.
+  - name: concentration_analyze
+    title: Single-Stock Concentration Analysis
+    annotations: {readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false}
+    required: [positionValue, costBasis, acquisitionDate, sector, stateCode, filingStatus, ordinaryIncome, totalAssets]
+    output_schema: true
+    source_operation: openapi/optionsahoy-com-openapi.json#calculateConcentration
+    description: Single-stock concentration risk (30/50/70% drawdown exposure) and sell-down versus hold versus hedge comparison with multi-year tax math.
+  - name: protective_put_price
+    title: Protective Put / Collar / Put Spread Pricing
+    annotations: {readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false}
+    required: [positionValue, sector, protectionLevel, tenorYears]
+    output_schema: true
+    source_operation: openapi/optionsahoy-com-openapi.json#priceProtectivePut
+    description: Protective put, zero-cost collar and put-spread pricing for a single-stock position at a protection level and tenor.
+  - name: qsbs_check
+    title: QSBS Qualification Check
+    annotations: {readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false}
+    required: [acquisitionDate, saleDate, entityType, acquisitionMethod, assetCategory, industry, activeBusiness, adjustedBasis, expectedGain, stateCode, ordinaryIncome, filingStatus]
+    output_schema: true
+    source_operation: openapi/optionsahoy-com-openapi.json#checkQsbs
+    description: Section 1202 qualified small business stock qualification — six statutory tests, exclusion percentage, federal tax saved, state conformity.
+  - name: equity_funding_plan
+    title: Equity-Funding Plan Comparison
+    annotations: {readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false}
+    required: [targetAfterTax, targetDate, ordinaryIncome, filingStatus, stateCode]
+    output_schema: true
+    source_operation: openapi/optionsahoy-com-openapi.json#planEquityFunding
+    description: Minimum-tax sell schedule to net a target after-tax dollar amount by a target date from vested public-stock lots; four named plans plus the frontier.
+  - name: rsu_lot_optimize
+    title: RSU Lot-Order Divest Plan
+    annotations: {readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false}
+    required: [lots, currentPrice, divestFraction, horizonYears, ordinaryIncome, filingStatus, stateCode]
+    output_schema: true
+    source_operation: openapi/optionsahoy-com-openapi.json#optimizeRsuLotOrder
+    description: Which vested RSU lots to sell, in which years, to divest a target fraction at the lowest computed tax, versus a FIFO sell order.
+  resources:
+  - {uri: 'https://optionsahoy.com/learn/amt-crossover', mime_type: text/markdown}
+  - {uri: 'https://optionsahoy.com/learn/nso-sell-vs-hold', mime_type: text/markdown}
+  - {uri: 'https://optionsahoy.com/learn/rsu-withholding-gap', mime_type: text/markdown}
+  - {uri: 'https://optionsahoy.com/learn/single-stock-concentration-risk', mime_type: text/markdown}
+  - {uri: 'https://optionsahoy.com/learn/zero-cost-collars', mime_type: text/markdown}
+  - {uri: 'https://optionsahoy.com/learn/qsbs', mime_type: text/markdown}
+  - {uri: 'https://optionsahoy.com/tools/equity-funding', mime_type: text/markdown}
+  - {uri: 'https://optionsahoy.com/tools/covered-tickers', mime_type: text/markdown, note: 'The HTTPS form of this URI 301s to /for-agents; the resource is read through resources/read.'}
+  - {uri: 'ui://widget/optionsahoy-scenario.html', mime_type: text/html+skybridge, note: 'An OpenAI Apps SDK (skybridge) widget; see components/optionsahoy-com-components.yml.'}
+  prompts: [optimize-iso-exercise, analyze-nso-decision, analyze-rsu-vest, analyze-concentration, price-protective-put, check-qsbs-eligibility, plan-equity-funding, plan-equity-portfolio]
+  tool_call_meta: >-
+    Per llms.txt, tools/call results carry _meta.optionsahoy with free_tool (the interactive web version of
+    the calculator just used), also_run (related tools) and, once per session, the beta link. Not observed:
+    this pipeline issues no tools/call.
+discovery:
+  well_known_manifest:
+    url: https://optionsahoy.com/.well-known/mcp.json
+    http_status: 200
+    file: well-known/optionsahoy-com-mcp.json
+    note: A provider-authored discovery manifest (not an IETF/MCP standard document) naming mcp_url, transport, protocolVersion, toolspec, openapi, llms and documentation. It reports version 1.10.1 while the live server reports 1.10.2.
+  toolspec:
+    url: https://optionsahoy.com/toolspec.json
+    http_status: 200
+    bytes: 82508
+    note: The tools/list shape (eight tools with inputSchema + annotations) published as a static file for platforms that ask for a tool spec; the provider's repo tests toolspec/OpenAPI parity.
+  registries:
+  - {name: Official MCP Registry, id: io.github.AlvisoOculus/optionsahoy-mcp, url: 'https://registry.modelcontextprotocol.io/v0/servers?search=optionsahoy', status: active, latest_version: 1.10.1, remote: 'streamable-http https://optionsahoy.com/mcp', server_json: 'https://github.com/AlvisoOculus/optionsahoy-mcp/blob/main/server.json'}
+  - {name: Smithery, url: 'https://smithery.ai/servers/alphalatitude/optionsahoy', install: 'npx @smithery/cli install alphalatitude/optionsahoy --client claude'}
+  - {name: Glama, url: 'https://glama.ai/mcp/servers/AlvisoOculus/optionsahoy-mcp'}
+  - {name: GitHub MCP Registry (VS Code MCP gallery), source: for-agents page}
+  - {name: Gemini CLI extensions gallery, install: 'gemini extensions install https://github.com/AlvisoOculus/optionsahoy-mcp'}
+  - {name: ChatGPT connector directory, source: 'for-agents changelog 2026-07-28: "Published in the ChatGPT plugin directory"'}
+  - {name: Poe, url: 'https://poe.com/OptionsAhoy', note: 'A consumer chat bot routed to the same engine.'}
+clients_documented:
+- {client: Claude Code, install: 'claude mcp add --transport http optionsahoy https://optionsahoy.com/mcp', extra: 'Bundled plugin (optionsahoy-claude-plugin) adds a routing skill.'}
+- {client: Claude Desktop, install: 'optionsahoy.mcpb from https://github.com/AlvisoOculus/optionsahoy-mcp/releases/latest/download/optionsahoy.mcpb'}
+- {client: Cursor, install: 'one-click deeplink or Settings → MCP; .cursor/mcp.json in the agent-kits'}
+- {client: VS Code (Copilot), install: 'one-click deeplink or Settings → Copilot → MCP Servers; also in the GitHub MCP Registry gallery'}
+- {client: Windsurf, install: 'mcp_config.json with serverUrl (agent-kits)'}
+- {client: Cline, install: 'Remote Servers → Add server, URL https://optionsahoy.com/mcp'}
+- {client: Gemini CLI, install: 'gemini extensions install https://github.com/AlvisoOculus/optionsahoy-mcp'}
+- {client: ChatGPT, install: 'connector via developer mode or the connector directory'}
+- {client: Any JSON-configured client, install: '{"mcpServers":{"optionsahoy":{"url":"https://optionsahoy.com/mcp","type":"streamableHttp"}}}'}
+- {client: Local stdio, install: 'npx -y optionsahoy-mcp (Node 20+)'}
+- {client: Framework SDKs, install: 'pip install optionsahoy-langchain | optionsahoy-pydantic-ai | optionsahoy-openai-agents | optionsahoy; npm install optionsahoy-ai-sdk — see packages/optionsahoy-com-packages.yml'}
+- {client: No-code builders, install: 'n8n workflow template plus Flowise, Langflow and Dify recipes (integrations/agent-builder-templates)'}
+- {client: Google Cloud Agent Registry, install: 'gcloud alpha agent-registry mcp-servers register --uri=https://optionsahoy.com/mcp ... (recipe on the for-agents page)'}
+web_mcp: null
