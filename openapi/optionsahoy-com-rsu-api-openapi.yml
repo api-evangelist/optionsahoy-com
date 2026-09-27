@@ -1,0 +1,357 @@
+openapi: 3.2.0
+info:
+  title: OptionsAhoy Calculator RSU API
+  summary: Deterministic equity-compensation calculator endpoints. JSON in, JSON out.
+  description: Multi-year equity-compensation optimization engine.
+  version: 1.10.1
+  contact:
+    name: AlphaLatitude Inc.
+    email: andrew@alphalatitude.com
+    url: https://optionsahoy.com/for-agents
+  license:
+    name: Proprietary. Free for non-commercial use during beta.
+    url: https://optionsahoy.com/terms
+servers:
+- url: https://optionsahoy.com
+  description: Production
+tags:
+- name: RSU
+  description: Restricted stock units
+paths:
+  /api/v1/rsu-sell-vs-hold:
+    post:
+      summary: RSU sell-at-vest vs. hold-for-LTCG
+      description: Compares the after-tax payout from selling RSU shares at vest and reinvesting in the market versus holding the shares, including the 12-month short-term-vs-long-term-capital-gains cliff, state tax, FICA, and the optional growth assumption.
+      operationId: calculateRsu
+      tags:
+      - RSU
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RsuInput'
+            example:
+              shares: 1000
+              currentPrice: 100
+              expectedSalePrice: 130
+              expectedMarketReturn: 0.07
+              ordinaryIncome: 200000
+              filingStatus: single
+              stateCode: CA
+              stillEmployed: true
+              holdYears: 2
+              volatility: 0.3
+      responses:
+        '200':
+          $ref: '#/components/responses/RsuSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+components:
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    RsuSuccess:
+      description: Successful rsu_sell_vs_hold result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/RsuResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              vest:
+                vestValue: 100000
+                federal: 33171.25
+                state: 9300.000000000004
+                socialSecurity: 0
+                medicare: 1450
+                additionalMedicare: 899.9999999999999
+                total: 44821.25
+                netCashAtVest: 55178.75
+                federalWithheldAtVest: 22000
+              bracketJump:
+                fromRate: 0.24
+                toRate: 0.35
+                thresholdAtJump: 201775
+              hold:
+                costBasis: 100
+                effectiveSalePrice: 118.81105408525967
+                sharesRetained: 551.7875
+                expectedGain: 10379.70450607022
+                capGainFederal: 1951.384447141201
+                capGainState: 965.3125190645296
+                capGainTotal: 2916.696966205731
+                isLongTerm: true
+                netAtYearN: 62641.75753986449
+              sellNowInvest:
+                netCashAtY0: 55178.75
+                marketGain: 7995.400875000001
+                capGainFederal: 1503.1353644999997
+                capGainState: 743.5722813749999
+                capGainTotal: 2246.707645875
+                isLongTerm: true
+                netAtYearN: 60927.443229125
+              holdMinusSell: 1714.3143107394935
+  schemas:
+    RsuResult:
+      type: object
+      description: RSU sell-at-vest vs hold result. All dollar amounts are USD.
+      properties:
+        vest:
+          type: object
+          description: Tax bill at vest on the full vest value (taxed as ordinary W-2 income).
+          properties:
+            vestValue:
+              type: number
+              description: shares x currentPrice in dollars, taxed as ordinary income at vest.
+            federal:
+              type: number
+              description: True federal ordinary income tax on the vest value in dollars (marginal bracket, not the withholding).
+            state:
+              type: number
+              description: State income tax on the vest value in dollars.
+            socialSecurity:
+              type: number
+              description: Social Security tax in dollars (0 when not employed or already past the wage base).
+            medicare:
+              type: number
+              description: Medicare tax in dollars.
+            additionalMedicare:
+              type: number
+              description: Additional Medicare (0.9%) tax in dollars.
+            total:
+              type: number
+              description: Total tax at vest in dollars.
+            netCashAtVest:
+              type: number
+              description: 'vestValue - total: net cash in dollars if every share is sold at vest.'
+            federalWithheldAtVest:
+              type: number
+              description: Mandatory federal supplemental withholding in dollars (22% on the first $1M of supplemental wages, 37% above). When less than vest.federal, the difference is owed at tax time.
+          required:
+          - vestValue
+          - federal
+          - state
+          - socialSecurity
+          - medicare
+          - additionalMedicare
+          - total
+          - netCashAtVest
+          - federalWithheldAtVest
+        bracketJump:
+          type:
+          - object
+          - 'null'
+          description: Marginal federal bracket change caused by the new ordinary income; null when the income stays within one bracket.
+          properties:
+            fromRate:
+              type: number
+              description: Marginal federal rate before the event, as a decimal (0.24 = 24%).
+            toRate:
+              type: number
+              description: Marginal federal rate after the event, as a decimal.
+            thresholdAtJump:
+              type: number
+              description: Taxable-income threshold in dollars where the bracket changes.
+          required:
+          - fromRate
+          - toRate
+          - thresholdAtJump
+        hold:
+          type: object
+          description: Keep the after-tax shares for holdYears, then sell.
+          properties:
+            costBasis:
+              type: number
+              description: Cost basis per share in dollars (FMV at vest).
+            effectiveSalePrice:
+              type: number
+              description: Projected sale price per share in dollars at end of holdYears, after the volatility haircut.
+            sharesRetained:
+              type: number
+              description: Shares kept after the sell-to-cover dollar-equivalent of the vest tax.
+            expectedGain:
+              type: number
+              description: 'Expected capital gain in dollars on the retained shares: (effectiveSalePrice - costBasis) x sharesRetained.'
+            capGainFederal:
+              type: number
+              description: 'Federal capital gains tax in dollars on the gain: LTCG (including NIIT) when isLongTerm, else the marginal ordinary rate.'
+            capGainState:
+              type: number
+              description: State capital gains tax in dollars on the gain.
+            capGainTotal:
+              type: number
+              description: Total capital gains tax in dollars at sale.
+            isLongTerm:
+              type: boolean
+              description: True when holdYears >= 1, so appreciation gets long-term capital gains treatment.
+            netAtYearN:
+              type: number
+              description: 'Net after-tax value of holding in dollars at end of holdYears: sale proceeds - capGainTotal.'
+          required:
+          - costBasis
+          - effectiveSalePrice
+          - sharesRetained
+          - expectedGain
+          - capGainFederal
+          - capGainState
+          - capGainTotal
+          - isLongTerm
+          - netAtYearN
+        sellNowInvest:
+          type: object
+          description: 'Counterfactual: sell every share at vest and reinvest the net cash at expectedMarketReturn for holdYears.'
+          properties:
+            netCashAtY0:
+              type: number
+              description: Net cash in dollars at vest available to reinvest (equals vest.netCashAtVest).
+            marketGain:
+              type: number
+              description: Market growth in dollars on the reinvested cash over holdYears.
+            capGainFederal:
+              type: number
+              description: 'Federal capital gains tax in dollars on the market gain: LTCG (including NIIT) when isLongTerm, else the marginal ordinary rate.'
+            capGainState:
+              type: number
+              description: State capital gains tax in dollars on the market gain.
+            capGainTotal:
+              type: number
+              description: Total capital gains tax in dollars on the market gain.
+            isLongTerm:
+              type: boolean
+              description: True when holdYears >= 1.
+            netAtYearN:
+              type: number
+              description: Net after-tax value of sell-at-vest-and-invest in dollars at end of holdYears.
+          required:
+          - netCashAtY0
+          - marketGain
+          - capGainFederal
+          - capGainState
+          - capGainTotal
+          - isLongTerm
+          - netAtYearN
+        holdMinusSell:
+          type: number
+          description: hold.netAtYearN - sellNowInvest.netAtYearN in dollars. Positive favors holding the vested shares; negative favors selling at vest and reinvesting.
+      required:
+      - vest
+      - bracketJump
+      - hold
+      - sellNowInvest
+      - holdMinusSell
+    Ticker:
+      type: string
+      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    RsuInput:
+      type: object
+      required:
+      - shares
+      - currentPrice
+      - ordinaryIncome
+      - filingStatus
+      - stateCode
+      - stillEmployed
+      - holdYears
+      properties:
+        shares:
+          type: integer
+          minimum: 1
+        currentPrice:
+          type: number
+          minimum: 0
+          description: Fair market value at vest.
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        stillEmployed:
+          type: boolean
+        holdYears:
+          type: number
+          minimum: 0.25
+          maximum: 5
+        expectedSalePrice:
+          type:
+          - number
+          - string
+          minimum: 0
+          description: Projected $/share at end of holdYears. Required unless `ticker` resolves it from currentPrice × (1 + trailing CAGR)^holdYears. Also accepts the string "market" to project currentPrice at the S&P 500 trailing average.
+        haircut:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Volatility-drag haircut on expectedSalePrice. Either this OR `volatility` is required; if both are supplied, `haircut` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma). Either this OR `haircut` is required; if both are supplied, `haircut` wins. Derived haircut = 1 - exp(-(sigma^2 / 2) * holdYears).
+          maximum: 5
+        expectedMarketReturn:
+          type:
+          - number
+          - string
+          description: Per-year reinvestment rate. Defaults to SPY trailing CAGR for holdYears if omitted. The string "market" names that same default explicitly.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
+externalDocs:
+  description: Integration surface, citation guidance, and roadmap
+  url: https://optionsahoy.com/for-agents

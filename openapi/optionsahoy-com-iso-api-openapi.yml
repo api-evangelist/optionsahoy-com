@@ -1,0 +1,966 @@
+openapi: 3.2.0
+info:
+  title: OptionsAhoy Calculator ISO API
+  summary: Deterministic equity-compensation calculator endpoints. JSON in, JSON out.
+  description: Multi-year equity-compensation optimization engine.
+  version: 1.10.1
+  contact:
+    name: AlphaLatitude Inc.
+    email: andrew@alphalatitude.com
+    url: https://optionsahoy.com/for-agents
+  license:
+    name: Proprietary. Free for non-commercial use during beta.
+    url: https://optionsahoy.com/terms
+servers:
+- url: https://optionsahoy.com
+  description: Production
+tags:
+- name: ISO
+  description: Incentive stock options
+paths:
+  /api/v1/amt-iso:
+    post:
+      summary: Multi-year ISO exercise schedule optimization
+      description: Returns a multi-year Incentive Stock Option (ISO) exercise schedule that maximizes after-tax Net Final Value (NFV) while minimizing federal and state Alternative Minimum Tax (AMT) across the horizon, accounting for AMT credit recovery in later years, qualifying-disposition timing, grant expiration, and the post-termination exercise window. The optimizer searches its full discretized candidate space and refines the result share by share, matching a brute-force maximum to the cent on the published tractable case. Its post-termination partial-exercise figure is scanned, so it can land a few shares off the exact optimum. Timing fields are measured from the current date.
+      operationId: optimizeAmtIso
+      tags:
+      - ISO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmtIsoInput'
+            example:
+              shares: 10000
+              strike: 2
+              fmv: 200
+              expectedGrowth: 0.15
+              volatility: 0.5
+              filingStatus: married_joint
+              ordinaryIncome: 400000
+              stateCode: CA
+              carryforwardCredit: 0
+              horizon: 4
+              cashReturnRate: 0.05
+              grantDate: '2022-01-15'
+              hasLeftCompany: false
+              terminationDate: null
+      responses:
+        '200':
+          $ref: '#/components/responses/AmtIsoSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+components:
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    AmtIsoSuccess:
+      description: Successful amt_iso_optimize result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/AmtIsoResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              crossoverShares: 240
+              crossoverBargain: 47650
+              alreadyInAmt: false
+              schedules:
+                lumpSum:
+                  label: lump_sum
+                  years:
+                  - year: 1
+                    shares: 10000
+                    bargain: 1980000
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 661510
+                    tmtState: 166600.00000000003
+                    amtOwedFederal: 580314
+                    amtOwedState: 136522.72400000005
+                    creditRecovered: 0
+                    cashTax: 828110
+                  - year: 2
+                    shares: 0
+                    bargain: 0
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 67854
+                    tmtState: 19343.31
+                    amtOwedFederal: 0
+                    amtOwedState: 0
+                    creditRecovered: 13342
+                    cashTax: 97931.276
+                  - year: 3
+                    shares: 0
+                    bargain: 0
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 67854
+                    tmtState: 19343.31
+                    amtOwedFederal: 0
+                    amtOwedState: 0
+                    creditRecovered: 13342
+                    cashTax: 97931.276
+                  - year: 4
+                    shares: 0
+                    bargain: 0
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 67854
+                    tmtState: 19343.31
+                    amtOwedFederal: 0
+                    amtOwedState: 0
+                    creditRecovered: 13342
+                    cashTax: 97931.276
+                  totalTax: 1121903.828
+                  baselineRegularTax: 445093.104
+                  exerciseTax: 676810.7239999999
+                  creditEarned: 580314
+                  creditRecovered: 40026
+                  creditRemaining: 540288
+                  grossGain: 2187625.781249999
+                  federalLTCG: 509969.9359374998
+                  stateLTCG: 265750.16890624986
+                  amtPremiumFV: 787767.4576205001
+                  nfv: 624138.2187857493
+                evenSplit:
+                  label: even_split
+                  years:
+                  - year: 1
+                    shares: 2500
+                    bargain: 495000
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 206454
+                    tmtState: 61540.27250000001
+                    amtOwedFederal: 125258
+                    amtOwedState: 31462.99650000001
+                    creditRecovered: 0
+                    cashTax: 267994.2725
+                  - year: 2
+                    shares: 2500
+                    bargain: 507499.99999999994
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 209954
+                    tmtState: 62634.02250000001
+                    amtOwedFederal: 128758
+                    amtOwedState: 32556.74650000001
+                    creditRecovered: 0
+                    cashTax: 272588.0225
+                  - year: 3
+                    shares: 2500
+                    bargain: 520312.49999999994
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 213541.5
+                    tmtState: 63755.11625000001
+                    amtOwedFederal: 132345.5
+                    amtOwedState: 33677.84025000001
+                    creditRecovered: 0
+                    cashTax: 277296.61625
+                  - year: 4
+                    shares: 2500
+                    bargain: 533445.3124999998
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 217218.68749999994
+                    tmtState: 64904.23734374999
+                    amtOwedFederal: 136022.68749999994
+                    amtOwedState: 34826.961343749994
+                    creditRecovered: 0
+                    cashTax: 282122.92484374996
+                  totalTax: 1100001.83609375
+                  baselineRegularTax: 445093.104
+                  exerciseTax: 654908.73209375
+                  creditEarned: 522384.18749999994
+                  creditRecovered: 0
+                  creditRemaining: 522384.18749999994
+                  grossGain: 2187625.781249999
+                  federalLTCG: 509969.9359374998
+                  stateLTCG: 265750.16890624986
+                  amtPremiumFV: 704447.8076958125
+                  nfv: 707457.8687104369
+                optimized:
+                  label: optimized
+                  years:
+                  - year: 1
+                    shares: 1350
+                    bargain: 267300
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 142698
+                    tmtState: 41616.52250000001
+                    amtOwedFederal: 61502
+                    amtOwedState: 11539.246500000008
+                    creditRecovered: 0
+                    cashTax: 184314.52250000002
+                  - year: 2
+                    shares: 2955
+                    bargain: 599864.9999999999
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 235816.19999999998
+                    tmtState: 69990.55
+                    amtOwedFederal: 154620.19999999998
+                    amtOwedState: 39913.274000000005
+                    creditRecovered: 0
+                    cashTax: 305806.75
+                  - year: 3
+                    shares: 2883
+                    bargain: 600024.3749999999
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 235864.23749999996
+                    tmtState: 70001.70625
+                    amtOwedFederal: 154668.23749999996
+                    amtOwedState: 39924.430250000005
+                    creditRecovered: 0
+                    cashTax: 305865.94375
+                  - year: 4
+                    shares: 2812
+                    bargain: 600019.2874999997
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 235862.10074999993
+                    tmtState: 70001.35012499998
+                    amtOwedFederal: 154666.10074999993
+                    amtOwedState: 39924.074124999985
+                    creditRecovered: 0
+                    cashTax: 305863.4508749999
+                  totalTax: 1101850.667125
+                  baselineRegularTax: 445093.104
+                  exerciseTax: 656757.5631249999
+                  creditEarned: 525456.5382499999
+                  creditRecovered: 0
+                  creditRemaining: 525456.5382499999
+                  grossGain: 2187625.781249999
+                  federalLTCG: 509969.9359374998
+                  stateLTCG: 265750.16890624986
+                  amtPremiumFV: 697940.0040770625
+                  nfv: 713965.6723291869
+              stateHasAmt: true
+              bargainPerShare: 198
+              timing:
+                grantExpiration: '2032-01-15T00:00:00.000Z'
+                qdEligibleDate: '2024-01-15T00:00:00.000Z'
+                exerciseWindowClose: null
+                maxHorizon: 5
+                daysUntilWindowClose: null
+                windowClosed: false
+                qdNotYetEligible: false
+              effectiveHorizon: 4
+  schemas:
+    AmtIsoInput:
+      type: object
+      required:
+      - shares
+      - strike
+      - fmv
+      - filingStatus
+      - ordinaryIncome
+      - stateCode
+      - horizon
+      - grantDate
+      - hasLeftCompany
+      properties:
+        shares:
+          type: integer
+          minimum: 1
+          description: Total ISO shares to exercise across the horizon.
+        strike:
+          type: number
+          minimum: 0
+          description: Strike price per share, USD.
+        fmv:
+          type: number
+          minimum: 0
+          description: Fair market value per share today (year 1).
+        expectedGrowth:
+          type:
+          - number
+          - string
+          description: Arithmetic-mean annual growth rate, e.g. 0.10 for 10%/year. Required unless `ticker` resolves it from trailing CAGR. Also accepts the string "market" to use the S&P 500 trailing average when the user has no view.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
+        volatilityDrag:
+          type: number
+          minimum: 0
+          maximum: 0.99
+          description: Multiplicative haircut at the planning horizon. Either this OR `volatility` is required; if both are supplied, `volatilityDrag` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma) of the stock. Either this OR `volatilityDrag` is required; if both are supplied, `volatilityDrag` wins. Derived drag = 1 - exp(-(sigma^2 / 2) * horizon).
+          maximum: 5
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        ordinaryIncome:
+          type: number
+          minimum: 0
+          description: 'Annual ordinary income excluding the exercise. Taxable income after deductions, not gross wages: no standard or itemized deduction is applied.'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        carryforwardCredit:
+          type: number
+          minimum: 0
+          description: Existing federal AMT credit from prior years. Optional; defaults to 0 (most first-time exercisers have none).
+        horizon:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Planning horizon in years.
+        cashReturnRate:
+          type: number
+          description: Annual after-tax return on idle cash, used to time-value AMT premiums. Optional; defaults to 0.04 when omitted.
+        grantDate:
+          $ref: '#/components/schemas/IsoDate'
+          description: ISO grant date. Drives the 10-year expiration and 2-year qualifying-disposition gate.
+        hasLeftCompany:
+          type: boolean
+        terminationDate:
+          oneOf:
+          - $ref: '#/components/schemas/IsoDate'
+          - type: 'null'
+          description: Termination date if departed; null otherwise. When set, opens the 90-day post-termination exercise window.
+    Ticker:
+      type: string
+      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    AmtIsoResult:
+      type: object
+      description: ISO/AMT exercise optimization result. All dollar amounts are USD.
+      properties:
+        crossoverShares:
+          type: integer
+          description: Maximum whole shares exercisable in year 1 before federal AMT exceeds regular tax (the AMT crossover).
+        crossoverBargain:
+          type: number
+          description: 'Bargain element in dollars at the crossover share count: crossoverShares x (fmv - strike).'
+        alreadyInAmt:
+          type: boolean
+          description: True when the user owes AMT even with zero exercise (regular tax below tentative minimum tax at baseline income).
+        schedules:
+          type: object
+          description: The three candidate exercise schedules, each evaluated at the effective horizon. Their nfv values are directly comparable; optimized is the highest-NFV schedule the optimizer found.
+          properties:
+            lumpSum:
+              type: object
+              description: Exercise all shares in year 1.
+              properties:
+                label:
+                  type: string
+                  enum:
+                  - lump_sum
+                  - even_split
+                  - optimized
+                  description: Which candidate plan this schedule represents.
+                years:
+                  type: array
+                  items:
+                    type: object
+                    description: Exercise and tax detail for one calendar year of the schedule.
+                    properties:
+                      year:
+                        type: integer
+                        description: Schedule year, 1-indexed (1 = current year).
+                      shares:
+                        type: number
+                        description: ISO shares exercised this year.
+                      bargain:
+                        type: number
+                        description: 'Bargain element recognized this year in dollars: shares x (projected FMV - strike).'
+                      regularFederal:
+                        type: number
+                        description: Regular federal income tax for the year in dollars (ordinary income only, before AMT).
+                      regularState:
+                        type: number
+                        description: Regular state income tax for the year in dollars.
+                      tmtFederal:
+                        type: number
+                        description: Federal tentative minimum tax for the year in dollars.
+                      tmtState:
+                        type: number
+                        description: State tentative minimum tax for the year in dollars (0 in states without AMT).
+                      amtOwedFederal:
+                        type: number
+                        description: Federal AMT owed above regular tax this year in dollars.
+                      amtOwedState:
+                        type: number
+                        description: State AMT owed above regular state tax this year in dollars.
+                      creditRecovered:
+                        type: number
+                        description: Federal AMT credit applied (recovered) this year in dollars.
+                      cashTax:
+                        type: number
+                        description: 'Total cash tax paid this year in dollars: federal + state, net of credit recovery.'
+                    required:
+                    - year
+                    - shares
+                    - bargain
+                    - regularFederal
+                    - regularState
+                    - tmtFederal
+                    - tmtState
+                    - amtOwedFederal
+                    - amtOwedState
+                    - creditRecovered
+                    - cashTax
+                  description: Per-year detail, one entry per year of the effective horizon.
+                totalTax:
+                  type: number
+                  description: Total cash tax paid across the horizon in dollars.
+                baselineRegularTax:
+                  type: number
+                  description: Tax owed with no exercise at all (regular federal + state on ordinary income, summed across the horizon) in dollars.
+                exerciseTax:
+                  type: number
+                  description: 'totalTax minus baselineRegularTax: the marginal tax cost of exercising, in dollars.'
+                creditEarned:
+                  type: number
+                  description: Federal AMT credit generated across the horizon in dollars.
+                creditRecovered:
+                  type: number
+                  description: Federal AMT credit recovered across the horizon in dollars.
+                creditRemaining:
+                  type: number
+                  description: Federal AMT credit still unrecovered at the horizon in dollars.
+                grossGain:
+                  type: number
+                  description: 'shares x (projected FMV at horizon - strike): the LTCG-eligible gain in dollars.'
+                federalLTCG:
+                  type: number
+                  description: Federal long-term capital gains tax (including NIIT) on grossGain in dollars.
+                stateLTCG:
+                  type: number
+                  description: State long-term capital gains tax on grossGain in dollars.
+                amtPremiumFV:
+                  type: number
+                  description: Future-valued AMT premium stream (exercise tax paid above the no-exercise baseline, compounded at cashReturnRate to the horizon) in dollars.
+                nfv:
+                  type: number
+                  description: 'After-tax Net Final Value at the horizon in dollars: grossGain - federalLTCG - stateLTCG - amtPremiumFV. This is the summary figure each schedule is scored on.'
+              required:
+              - label
+              - years
+              - totalTax
+              - baselineRegularTax
+              - exerciseTax
+              - creditEarned
+              - creditRecovered
+              - creditRemaining
+              - grossGain
+              - federalLTCG
+              - stateLTCG
+              - amtPremiumFV
+              - nfv
+            evenSplit:
+              type: object
+              description: Exercise shares/horizon shares each year.
+              properties:
+                label:
+                  type: string
+                  enum:
+                  - lump_sum
+                  - even_split
+                  - optimized
+                  description: Which candidate plan this schedule represents.
+                years:
+                  type: array
+                  items:
+                    type: object
+                    description: Exercise and tax detail for one calendar year of the schedule.
+                    properties:
+                      year:
+                        type: integer
+                        description: Schedule year, 1-indexed (1 = current year).
+                      shares:
+                        type: number
+                        description: ISO shares exercised this year.
+                      bargain:
+                        type: number
+                        description: 'Bargain element recognized this year in dollars: shares x (projected FMV - strike).'
+                      regularFederal:
+                        type: number
+                        description: Regular federal income tax for the year in dollars (ordinary income only, before AMT).
+                      regularState:
+                        type: number
+                        description: Regular state income tax for the year in dollars.
+                      tmtFederal:
+                        type: number
+                        description: Federal tentative minimum tax for the year in dollars.
+                      tmtState:
+                        type: number
+                        description: State tentative minimum tax for the year in dollars (0 in states without AMT).
+                      amtOwedFederal:
+                        type: number
+                        description: Federal AMT owed above regular tax this year in dollars.
+                      amtOwedState:
+                        type: number
+                        description: State AMT owed above regular state tax this year in dollars.
+                      creditRecovered:
+                        type: number
+                        description: Federal AMT credit applied (recovered) this year in dollars.
+                      cashTax:
+                        type: number
+                        description: 'Total cash tax paid this year in dollars: federal + state, net of credit recovery.'
+                    required:
+                    - year
+                    - shares
+                    - bargain
+                    - regularFederal
+                    - regularState
+                    - tmtFederal
+                    - tmtState
+                    - amtOwedFederal
+                    - amtOwedState
+                    - creditRecovered
+                    - cashTax
+                  description: Per-year detail, one entry per year of the effective horizon.
+                totalTax:
+                  type: number
+                  description: Total cash tax paid across the horizon in dollars.
+                baselineRegularTax:
+                  type: number
+                  description: Tax owed with no exercise at all (regular federal + state on ordinary income, summed across the horizon) in dollars.
+                exerciseTax:
+                  type: number
+                  description: 'totalTax minus baselineRegularTax: the marginal tax cost of exercising, in dollars.'
+                creditEarned:
+                  type: number
+                  description: Federal AMT credit generated across the horizon in dollars.
+                creditRecovered:
+                  type: number
+                  description: Federal AMT credit recovered across the horizon in dollars.
+                creditRemaining:
+                  type: number
+                  description: Federal AMT credit still unrecovered at the horizon in dollars.
+                grossGain:
+                  type: number
+                  description: 'shares x (projected FMV at horizon - strike): the LTCG-eligible gain in dollars.'
+                federalLTCG:
+                  type: number
+                  description: Federal long-term capital gains tax (including NIIT) on grossGain in dollars.
+                stateLTCG:
+                  type: number
+                  description: State long-term capital gains tax on grossGain in dollars.
+                amtPremiumFV:
+                  type: number
+                  description: Future-valued AMT premium stream (exercise tax paid above the no-exercise baseline, compounded at cashReturnRate to the horizon) in dollars.
+                nfv:
+                  type: number
+                  description: 'After-tax Net Final Value at the horizon in dollars: grossGain - federalLTCG - stateLTCG - amtPremiumFV. This is the summary figure each schedule is scored on.'
+              required:
+              - label
+              - years
+              - totalTax
+              - baselineRegularTax
+              - exerciseTax
+              - creditEarned
+              - creditRecovered
+              - creditRemaining
+              - grossGain
+              - federalLTCG
+              - stateLTCG
+              - amtPremiumFV
+              - nfv
+            optimized:
+              type: object
+              description: The NFV-maximal per-year allocation found by the optimizer. The recommended plan.
+              properties:
+                label:
+                  type: string
+                  enum:
+                  - lump_sum
+                  - even_split
+                  - optimized
+                  description: Which candidate plan this schedule represents.
+                years:
+                  type: array
+                  items:
+                    type: object
+                    description: Exercise and tax detail for one calendar year of the schedule.
+                    properties:
+                      year:
+                        type: integer
+                        description: Schedule year, 1-indexed (1 = current year).
+                      shares:
+                        type: number
+                        description: ISO shares exercised this year.
+                      bargain:
+                        type: number
+                        description: 'Bargain element recognized this year in dollars: shares x (projected FMV - strike).'
+                      regularFederal:
+                        type: number
+                        description: Regular federal income tax for the year in dollars (ordinary income only, before AMT).
+                      regularState:
+                        type: number
+                        description: Regular state income tax for the year in dollars.
+                      tmtFederal:
+                        type: number
+                        description: Federal tentative minimum tax for the year in dollars.
+                      tmtState:
+                        type: number
+                        description: State tentative minimum tax for the year in dollars (0 in states without AMT).
+                      amtOwedFederal:
+                        type: number
+                        description: Federal AMT owed above regular tax this year in dollars.
+                      amtOwedState:
+                        type: number
+                        description: State AMT owed above regular state tax this year in dollars.
+                      creditRecovered:
+                        type: number
+                        description: Federal AMT credit applied (recovered) this year in dollars.
+                      cashTax:
+                        type: number
+                        description: 'Total cash tax paid this year in dollars: federal + state, net of credit recovery.'
+                    required:
+                    - year
+                    - shares
+                    - bargain
+                    - regularFederal
+                    - regularState
+                    - tmtFederal
+                    - tmtState
+                    - amtOwedFederal
+                    - amtOwedState
+                    - creditRecovered
+                    - cashTax
+                  description: Per-year detail, one entry per year of the effective horizon.
+                totalTax:
+                  type: number
+                  description: Total cash tax paid across the horizon in dollars.
+                baselineRegularTax:
+                  type: number
+                  description: Tax owed with no exercise at all (regular federal + state on ordinary income, summed across the horizon) in dollars.
+                exerciseTax:
+                  type: number
+                  description: 'totalTax minus baselineRegularTax: the marginal tax cost of exercising, in dollars.'
+                creditEarned:
+                  type: number
+                  description: Federal AMT credit generated across the horizon in dollars.
+                creditRecovered:
+                  type: number
+                  description: Federal AMT credit recovered across the horizon in dollars.
+                creditRemaining:
+                  type: number
+                  description: Federal AMT credit still unrecovered at the horizon in dollars.
+                grossGain:
+                  type: number
+                  description: 'shares x (projected FMV at horizon - strike): the LTCG-eligible gain in dollars.'
+                federalLTCG:
+                  type: number
+                  description: Federal long-term capital gains tax (including NIIT) on grossGain in dollars.
+                stateLTCG:
+                  type: number
+                  description: State long-term capital gains tax on grossGain in dollars.
+                amtPremiumFV:
+                  type: number
+                  description: Future-valued AMT premium stream (exercise tax paid above the no-exercise baseline, compounded at cashReturnRate to the horizon) in dollars.
+                nfv:
+                  type: number
+                  description: 'After-tax Net Final Value at the horizon in dollars: grossGain - federalLTCG - stateLTCG - amtPremiumFV. This is the summary figure each schedule is scored on.'
+              required:
+              - label
+              - years
+              - totalTax
+              - baselineRegularTax
+              - exerciseTax
+              - creditEarned
+              - creditRecovered
+              - creditRemaining
+              - grossGain
+              - federalLTCG
+              - stateLTCG
+              - amtPremiumFV
+              - nfv
+          required:
+          - lumpSum
+          - evenSplit
+          - optimized
+        stateHasAmt:
+          type: boolean
+          description: True when the user state levies its own AMT (CA, CO, CT, MN).
+        bargainPerShare:
+          type: number
+          description: 'Year-1 bargain element per share in dollars: max(0, fmv - strike).'
+        timing:
+          type: object
+          description: Timing constraints derived from grantDate and (when departed) terminationDate.
+          properties:
+            grantExpiration:
+              type: string
+              description: 'Grant expiration date: grantDate + 10 years (IRC 422 maximum ISO term). ISO 8601 date-time string.'
+            qdEligibleDate:
+              type: string
+              description: 'Earliest qualifying-disposition date measured from grant: grantDate + 2 years. ISO 8601 date-time string.'
+            exerciseWindowClose:
+              type:
+              - string
+              - 'null'
+              description: Post-termination exercise deadline (terminationDate + 90 days) as an ISO 8601 date-time string; null while still employed.
+            maxHorizon:
+              type: integer
+              description: Maximum usable planning horizon in years (1..10), capped by grant expiration or the post-termination window.
+            daysUntilWindowClose:
+              type:
+              - number
+              - 'null'
+              description: Days until the post-termination exercise window closes (can be negative when already past); null while still employed.
+            windowClosed:
+              type: boolean
+              description: True when the user departed and the 90-day exercise deadline has already passed.
+            qdNotYetEligible:
+              type: boolean
+              description: True when grantDate + 2 years is still in the future (a sale today could not be a qualifying disposition).
+          required:
+          - grantExpiration
+          - qdEligibleDate
+          - exerciseWindowClose
+          - maxHorizon
+          - daysUntilWindowClose
+          - windowClosed
+          - qdNotYetEligible
+        effectiveHorizon:
+          type: integer
+          description: 'Horizon actually used by the schedules: min(requested horizon, timing.maxHorizon).'
+        departedRecommendation:
+          type: object
+          description: 'Present only when hasLeftCompany=true and the 90-day post-termination window is still open: the partial-exercise quantity with the highest expected after-tax value found by a scan over candidate share counts, which can land a few shares off the exact optimum.'
+          properties:
+            recommendedShares:
+              type: integer
+              description: Share count to exercise within the window, the best found by the scan.
+            recommendedExerciseTax:
+              type: number
+              description: AMT cost in dollars at the recommended share count.
+            recommendedNetValue:
+              type: number
+              description: Expected after-tax value in dollars at the hold horizon for the recommended count.
+            fullExerciseShares:
+              type: integer
+              description: Total shares available (the exercise-everything alternative).
+            fullExerciseTax:
+              type: number
+              description: AMT cost in dollars of exercising all shares.
+            fullExerciseNetValue:
+              type: number
+              description: Expected after-tax value in dollars at the hold horizon if all shares are exercised.
+            holdYears:
+              type: number
+              description: Post-exercise hold horizon in years used for the comparison.
+            futureFmvPerShare:
+              type: number
+              description: Projected FMV per share in dollars at the hold horizon.
+            recommendedSchedule:
+              type: object
+              description: Year-by-year tax schedule for the recommended share count.
+              properties:
+                label:
+                  type: string
+                  enum:
+                  - lump_sum
+                  - even_split
+                  - optimized
+                  description: Which candidate plan this schedule represents.
+                years:
+                  type: array
+                  items:
+                    type: object
+                    description: Exercise and tax detail for one calendar year of the schedule.
+                    properties:
+                      year:
+                        type: integer
+                        description: Schedule year, 1-indexed (1 = current year).
+                      shares:
+                        type: number
+                        description: ISO shares exercised this year.
+                      bargain:
+                        type: number
+                        description: 'Bargain element recognized this year in dollars: shares x (projected FMV - strike).'
+                      regularFederal:
+                        type: number
+                        description: Regular federal income tax for the year in dollars (ordinary income only, before AMT).
+                      regularState:
+                        type: number
+                        description: Regular state income tax for the year in dollars.
+                      tmtFederal:
+                        type: number
+                        description: Federal tentative minimum tax for the year in dollars.
+                      tmtState:
+                        type: number
+                        description: State tentative minimum tax for the year in dollars (0 in states without AMT).
+                      amtOwedFederal:
+                        type: number
+                        description: Federal AMT owed above regular tax this year in dollars.
+                      amtOwedState:
+                        type: number
+                        description: State AMT owed above regular state tax this year in dollars.
+                      creditRecovered:
+                        type: number
+                        description: Federal AMT credit applied (recovered) this year in dollars.
+                      cashTax:
+                        type: number
+                        description: 'Total cash tax paid this year in dollars: federal + state, net of credit recovery.'
+                    required:
+                    - year
+                    - shares
+                    - bargain
+                    - regularFederal
+                    - regularState
+                    - tmtFederal
+                    - tmtState
+                    - amtOwedFederal
+                    - amtOwedState
+                    - creditRecovered
+                    - cashTax
+                  description: Per-year detail, one entry per year of the effective horizon.
+                totalTax:
+                  type: number
+                  description: Total cash tax paid across the horizon in dollars.
+                baselineRegularTax:
+                  type: number
+                  description: Tax owed with no exercise at all (regular federal + state on ordinary income, summed across the horizon) in dollars.
+                exerciseTax:
+                  type: number
+                  description: 'totalTax minus baselineRegularTax: the marginal tax cost of exercising, in dollars.'
+                creditEarned:
+                  type: number
+                  description: Federal AMT credit generated across the horizon in dollars.
+                creditRecovered:
+                  type: number
+                  description: Federal AMT credit recovered across the horizon in dollars.
+                creditRemaining:
+                  type: number
+                  description: Federal AMT credit still unrecovered at the horizon in dollars.
+                grossGain:
+                  type: number
+                  description: 'shares x (projected FMV at horizon - strike): the LTCG-eligible gain in dollars.'
+                federalLTCG:
+                  type: number
+                  description: Federal long-term capital gains tax (including NIIT) on grossGain in dollars.
+                stateLTCG:
+                  type: number
+                  description: State long-term capital gains tax on grossGain in dollars.
+                amtPremiumFV:
+                  type: number
+                  description: Future-valued AMT premium stream (exercise tax paid above the no-exercise baseline, compounded at cashReturnRate to the horizon) in dollars.
+                nfv:
+                  type: number
+                  description: 'After-tax Net Final Value at the horizon in dollars: grossGain - federalLTCG - stateLTCG - amtPremiumFV. This is the summary figure each schedule is scored on.'
+              required:
+              - label
+              - years
+              - totalTax
+              - baselineRegularTax
+              - exerciseTax
+              - creditEarned
+              - creditRecovered
+              - creditRemaining
+              - grossGain
+              - federalLTCG
+              - stateLTCG
+              - amtPremiumFV
+              - nfv
+            curve:
+              type: array
+              description: Share-count vs after-tax-value curve sampled uniformly across [0, total shares], for charting.
+              items:
+                type: object
+                properties:
+                  shares:
+                    type: number
+                    description: Exercised share count at this sample point.
+                  netValue:
+                    type: number
+                    description: Expected after-tax value in dollars at this share count.
+                  exerciseTax:
+                    type: number
+                    description: AMT cost in dollars at this share count.
+                required:
+                - shares
+                - netValue
+                - exerciseTax
+          required:
+          - recommendedShares
+          - recommendedExerciseTax
+          - recommendedNetValue
+          - fullExerciseShares
+          - fullExerciseTax
+          - fullExerciseNetValue
+          - holdYears
+          - futureFmvPerShare
+          - recommendedSchedule
+          - curve
+      required:
+      - crossoverShares
+      - crossoverBargain
+      - alreadyInAmt
+      - schedules
+      - stateHasAmt
+      - bargainPerShare
+      - timing
+      - effectiveHorizon
+externalDocs:
+  description: Integration surface, citation guidance, and roadmap
+  url: https://optionsahoy.com/for-agents

@@ -1,0 +1,193 @@
+openapi: 3.2.0
+info:
+  title: OptionsAhoy Calculator Discovery API
+  summary: Deterministic equity-compensation calculator endpoints. JSON in, JSON out.
+  description: Multi-year equity-compensation optimization engine.
+  version: 1.10.1
+  contact:
+    name: AlphaLatitude Inc.
+    email: andrew@alphalatitude.com
+    url: https://optionsahoy.com/for-agents
+  license:
+    name: Proprietary. Free for non-commercial use during beta.
+    url: https://optionsahoy.com/terms
+servers:
+- url: https://optionsahoy.com
+  description: Production
+tags:
+- name: Discovery
+  description: API inventory
+paths:
+  /api/v1:
+    get:
+      summary: API discovery
+      description: Returns the API name, version, documentation URL, OpenAPI URL, and the array of endpoints. Cheap, public, no body required.
+      operationId: discover
+      tags:
+      - Discovery
+      responses:
+        '200':
+          description: Endpoint inventory
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - name
+                - version
+                - endpoints
+                properties:
+                  name:
+                    type: string
+                  version:
+                    type: string
+                  documentation:
+                    type: string
+                    format: uri
+                  openapi:
+                    type: string
+                    format: uri
+                  endpoints:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - method
+                      - path
+                      - description
+                      properties:
+                        method:
+                          type: string
+                        path:
+                          type: string
+                        description:
+                          type: string
+  /api/v1/stats:
+    get:
+      summary: Public MCP usage summary
+      description: Returns total tool calls, last 24h / 7d / 30d counts, the top 5 most-called tools, and the timestamp of the most recent call. PII-safe (no IPs, user agents, or arguments). Cached 60 seconds at the edge.
+      operationId: stats
+      tags:
+      - Discovery
+      responses:
+        '200':
+          description: Usage summary
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - totalCalls
+                - last24h
+                - last7d
+                - last30d
+                - topTools
+                - asOf
+                properties:
+                  totalCalls:
+                    type: integer
+                    minimum: 0
+                  last24h:
+                    type: integer
+                    minimum: 0
+                  last7d:
+                    type: integer
+                    minimum: 0
+                  last30d:
+                    type: integer
+                    minimum: 0
+                  topTools:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - name
+                      - count
+                      properties:
+                        name:
+                          type: string
+                        count:
+                          type: integer
+                          minimum: 0
+                  lastCallAt:
+                    type:
+                    - string
+                    - 'null'
+                    format: date-time
+                  asOf:
+                    type: string
+                    format: date-time
+                  distinctClients30d:
+                    type: integer
+                    minimum: 0
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '503':
+          description: Stats binding not configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/v1/badge:
+    get:
+      summary: Shields.io usage badge
+      description: Returns the shields.io endpoint-badge JSON (schemaVersion 1) for live MCP usage. Used by README badges; rendered via https://img.shields.io/endpoint?url=. PII-safe aggregate counts only. Cached 5 minutes at the edge. Always returns 200 (lightgrey n/a badge when the stats binding is unconfigured) so the badge keeps rendering.
+      operationId: badge
+      tags:
+      - Discovery
+      parameters:
+      - name: metric
+        in: query
+        required: false
+        description: Which metric to render. Defaults to calls30d.
+        schema:
+          type: string
+          enum:
+          - calls30d
+          - calls
+          - clients30d
+          default: calls30d
+      responses:
+        '200':
+          description: Shields endpoint-badge object
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - schemaVersion
+                - label
+                - message
+                - color
+                properties:
+                  schemaVersion:
+                    type: integer
+                    enum:
+                    - 1
+                  label:
+                    type: string
+                  message:
+                    type: string
+                  color:
+                    type: string
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+components:
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+externalDocs:
+  description: Integration surface, citation guidance, and roadmap
+  url: https://optionsahoy.com/for-agents

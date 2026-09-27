@@ -1,0 +1,573 @@
+openapi: 3.2.0
+info:
+  title: OptionsAhoy Calculator Hedging API
+  summary: Deterministic equity-compensation calculator endpoints. JSON in, JSON out.
+  description: Multi-year equity-compensation optimization engine.
+  version: 1.10.1
+  contact:
+    name: AlphaLatitude Inc.
+    email: andrew@alphalatitude.com
+    url: https://optionsahoy.com/for-agents
+  license:
+    name: Proprietary. Free for non-commercial use during beta.
+    url: https://optionsahoy.com/terms
+servers:
+- url: https://optionsahoy.com
+  description: Production
+tags:
+- name: Hedging
+  description: Protective put, collar, and put spread pricing
+paths:
+  /api/v1/protective-put:
+    post:
+      summary: Protective put, zero-cost collar, and put-spread pricing
+      description: Prices a protective put, a zero-cost collar, and a put spread on a single-stock position. Reports annual cost, maximum loss, upside cap (collar), protected band (put spread), and bad-year coverage, plus which structure it recommends.
+      operationId: priceProtectivePut
+      tags:
+      - Hedging
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProtectivePutInput'
+            example:
+              positionValue: 400000
+              sector: tech_software
+              protectionLevel: 0.1
+              tenorYears: 1
+              spreadRiskLevel: 0.1
+              volatility: 0.4
+      responses:
+        '200':
+          $ref: '#/components/responses/ProtectivePutSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+components:
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    ProtectivePutSuccess:
+      description: Successful protective_put_price result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/ProtectivePutResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              inputs:
+                positionValue: 400000
+                sector: tech_software
+                volatility: 0.4
+                volatilitySource: explicit
+                pricingMode: flat
+                protectionLevel: 0.1
+                tenorYears: 1
+                spreadRiskLevel: 0.1
+              riskFreeRate: 0.045
+              realWorldDrift: 0.12
+              barePut:
+                strike: 360000
+                premium: 35115.97292661169
+                annualCost: 35115.97292661169
+                annualCostPct: 0.08778993231652923
+                maxLoss: 75115.97292661169
+                badYearPrice: 249346.60609481626
+                badYearDropPct: 0.3766334847629593
+                coveredLossAtBadYear: 110653.39390518374
+                premiumToCoveredRatio: 0.3173510697439767
+                expectedProfit: 48000
+                premiumToExpectedProfitRatio: 0.7315827693044102
+              collar:
+                putStrike: 360000
+                callStrike: 508923.33984375
+                netPremium: 0
+                annualCost: 0
+                annualCostPct: 0
+                maxLoss: 40000
+                upsideCap: 108923.33984375
+                upsideCapPct: 0.272308349609375
+                isZeroCost: true
+                capProbability: 0.30780487520408406
+              putSpread:
+                available: true
+                unavailableReason: null
+                longStrike: 360000
+                longPremium: 35115.97292661169
+                shortStrike: 249346.60609481626
+                shortPremium: 5616.845397865807
+                shortSigma: 0.4
+                netPremium: 29499.127528745885
+                annualCost: 29499.127528745885
+                annualCostPct: 0.07374781882186471
+                maxLossInBand: 69499.12752874588
+                bandWidth: 110653.39390518374
+                shortStrikeDropPct: 0.3766334847629593
+                breachProbability: 0.10000006859614752
+                riskLevel: 0.1
+                savingsPct: 0.15995129651125892
+                coveredLossAtBadYear: 110653.39390518374
+              payoffTable:
+              - drawdownPct: -0.6
+                barePutPnl: -75115.97292661169
+                collarPnl: -40000
+                spreadPnl: -158845.73362356215
+                unhedgedPnl: -240000
+              - drawdownPct: -0.5
+                barePutPnl: -75115.97292661169
+                collarPnl: -40000
+                spreadPnl: -118845.73362356215
+                unhedgedPnl: -200000
+              - drawdownPct: -0.4
+                barePutPnl: -75115.97292661169
+                collarPnl: -40000
+                spreadPnl: -78845.73362356215
+                unhedgedPnl: -160000
+              - drawdownPct: -0.3
+                barePutPnl: -75115.97292661169
+                collarPnl: -40000
+                spreadPnl: -69499.12752874588
+                unhedgedPnl: -120000
+              - drawdownPct: -0.2
+                barePutPnl: -75115.97292661169
+                collarPnl: -40000
+                spreadPnl: -69499.12752874588
+                unhedgedPnl: -80000
+              - drawdownPct: -0.1
+                barePutPnl: -75115.97292661169
+                collarPnl: -40000
+                spreadPnl: -69499.12752874588
+                unhedgedPnl: -40000
+              - drawdownPct: 0
+                barePutPnl: -35115.97292661169
+                collarPnl: 0
+                spreadPnl: -29499.127528745885
+                unhedgedPnl: 0
+              - drawdownPct: 0.1
+                barePutPnl: 4884.027073388308
+                collarPnl: 40000
+                spreadPnl: 10500.872471254115
+                unhedgedPnl: 40000
+              - drawdownPct: 0.2
+                barePutPnl: 44884.02707338831
+                collarPnl: 80000
+                spreadPnl: 50500.872471254115
+                unhedgedPnl: 80000
+              - drawdownPct: 0.3
+                barePutPnl: 84884.02707338831
+                collarPnl: 108923.33984375
+                spreadPnl: 90500.87247125412
+                unhedgedPnl: 120000
+              - drawdownPct: 0.4
+                barePutPnl: 124884.02707338831
+                collarPnl: 108923.33984375
+                spreadPnl: 130500.87247125412
+                unhedgedPnl: 160000
+              - drawdownPct: 0.5
+                barePutPnl: 164884.0270733883
+                collarPnl: 108923.33984375
+                spreadPnl: 170500.87247125412
+                unhedgedPnl: 200000
+              payoffRange:
+                lowerPct: -0.6
+                upperPct: 0.5
+              recommended: none
+  schemas:
+    ProtectivePutInput:
+      type: object
+      required:
+      - positionValue
+      - sector
+      - protectionLevel
+      - tenorYears
+      properties:
+        positionValue:
+          type: number
+          minimum: 0
+        sector:
+          $ref: '#/components/schemas/SectorKey'
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized implied volatility (σ). Defaults to a sector-typical implied volatility when omitted.
+          maximum: 5
+        protectionLevel:
+          type: number
+          minimum: 0.05
+          maximum: 0.5
+          description: Drawdown the put protects against, as a fraction (e.g. 0.20 = 20% below current).
+        tenorYears:
+          type: number
+          minimum: 0.25
+          description: Option tenor in years.
+        expectedReturn:
+          type: number
+          description: Override sector long-run drift μ.
+        spreadRiskLevel:
+          type: number
+          minimum: 0.01
+          maximum: 0.2
+          description: 'Put spread floor breach risk: target probability the stock ends below the spread''s short strike. Presets 0.20 / 0.10 / 0.05 / 0.01; off-preset values snap to the nearest. Affects only the putSpread block. Default 0.10.'
+        tickerLabel:
+          type: string
+          description: Optional ticker for warning copy (e.g. "AAPL").
+        ticker:
+          type: string
+          description: Optional public-stock symbol to derive implied volatility (e.g. "AAPL").
+    ProtectivePutResult:
+      type: object
+      description: Protective put, zero-cost collar, and put-spread pricing on a single-stock position. All dollar amounts are USD.
+      properties:
+        inputs:
+          type: object
+          description: 'Echo of the resolved inputs actually priced: positionValue, sector, volatility (the sigma priced), volatilitySource (where that sigma came from) and pricingMode (how the legs were priced), protectionLevel, tenorYears, plus expectedReturn, spreadRiskLevel, and tickerLabel when supplied.'
+          properties:
+            positionValue:
+              type: number
+              description: Position value priced, in dollars.
+            sector:
+              type: string
+              description: Sector tag used for defaults.
+            volatility:
+              type: number
+              description: Annualized sigma actually used in pricing, as a decimal.
+            volatilitySource:
+              type: string
+              enum:
+              - explicit
+              - ticker
+              - sector-default
+              - chain
+              description: 'Which source produced the sigma actually priced: "explicit" (caller-supplied), "chain" (interpolated from the stock''s live option chain at the strike being priced), "ticker" (the stock''s published at-the-money implied vol as of the last close), or "sector-default" (feed unavailable or ticker uncovered; a sector-typical estimate - tell the user the price is not stock-specific).'
+            pricingMode:
+              type: string
+              enum:
+              - chain-skew
+              - flat
+              description: 'How the legs were priced. "chain-skew": each leg is priced at the implied volatility of its own strike, read off the live chain, so the floor put carries the market''s downside skew and the put spread''s short leg carries its own. "flat": every leg is priced at the single `volatility` above, which understates what out-of-the-money protection costs and overstates the rebate the spread''s short leg earns - the quote is an estimate of this structure''s cost, not a strike-aware one. Reached whenever no live chain applies: an explicit `volatility`, no `ticker`, or a chain that could not be fetched or was not current.'
+            protectionLevel:
+              type: number
+              description: Protection level as a fraction below spot (0.10 = 10% OTM put).
+            tenorYears:
+              type: number
+              description: Option tenor in years.
+            expectedReturn:
+              type: number
+              description: Caller-supplied annual expected return used for probability metrics. Omitted when not supplied.
+            spreadRiskLevel:
+              type: number
+              description: Put spread floor breach risk echoed from the request (snapped to a supported preset). Omitted when not supplied.
+            tickerLabel:
+              type: string
+              description: Display label echoed from the request (ticker or tickerLabel). Omitted when not supplied.
+          required:
+          - positionValue
+          - sector
+          - volatility
+          - volatilitySource
+          - pricingMode
+          - protectionLevel
+          - tenorYears
+        riskFreeRate:
+          type: number
+          description: Annualized risk-free rate used in option pricing, looked up for the tenor, as a decimal.
+        realWorldDrift:
+          type: number
+          description: 'Annual real-world drift used for the probability metrics: expectedReturn when supplied, else the sector long-run return. Does not affect premium math.'
+        barePut:
+          type: object
+          description: 'Bare protective put: pay premium for a hard floor.'
+          properties:
+            strike:
+              type: number
+              description: 'Put strike in dollars: (1 - protectionLevel) x position value.'
+            premium:
+              type: number
+              description: Put premium in dollars for the full tenor.
+            annualCost:
+              type: number
+              description: Premium annualized, in dollars per year.
+            annualCostPct:
+              type: number
+              description: Annualized premium as a fraction of position value.
+            maxLoss:
+              type: number
+              description: 'Worst-case loss in dollars with the put in place: position - strike + premium.'
+            badYearPrice:
+              type: number
+              description: Position value in dollars at the 10th-percentile (1-in-10 bad year) outcome under real-world drift.
+            badYearDropPct:
+              type: number
+              description: Bad-year drawdown as a fraction of position value (always >= 0).
+            coveredLossAtBadYear:
+              type: number
+              description: Dollars the put pays at the bad-year price; 0 when the bad-year drop never reaches the protection floor.
+            premiumToCoveredRatio:
+              type:
+              - number
+              - 'null'
+              description: Premium per dollar of bad-year coverage. null (serialized from Infinity) when the put covers nothing at the bad-year price; above ~0.40 the floor is set too deep.
+            expectedProfit:
+              type: number
+              description: Expected position profit in dollars over the tenor under real-world drift.
+            premiumToExpectedProfitRatio:
+              type:
+              - number
+              - 'null'
+              description: Fraction of typical-period expected profit consumed by the premium. null (serialized from Infinity) when expected profit is zero or negative; above ~0.50 the hedge eats most of the upside.
+          required:
+          - strike
+          - premium
+          - annualCost
+          - annualCostPct
+          - maxLoss
+          - badYearPrice
+          - badYearDropPct
+          - coveredLossAtBadYear
+          - premiumToCoveredRatio
+          - expectedProfit
+          - premiumToExpectedProfitRatio
+        collar:
+          type: object
+          description: 'Put financed by a short call: lower or zero net premium in exchange for capped upside.'
+          properties:
+            putStrike:
+              type: number
+              description: Long put strike in dollars (same floor as the bare put).
+            callStrike:
+              type: number
+              description: Short call strike in dollars (the upside cap level).
+            netPremium:
+              type: number
+              description: 'Net premium in dollars: put premium - call premium, floored at 0.'
+            annualCost:
+              type: number
+              description: Net premium annualized, in dollars per year.
+            annualCostPct:
+              type: number
+              description: Annualized net premium as a fraction of position value.
+            maxLoss:
+              type: number
+              description: Worst-case loss in dollars with the collar in place.
+            upsideCap:
+              type: number
+              description: 'Maximum upside in dollars before the short call caps gains: callStrike - position value.'
+            upsideCapPct:
+              type: number
+              description: Maximum upside as a fraction of position value.
+            isZeroCost:
+              type: boolean
+              description: True when the solved call strike makes the collar effectively zero net premium.
+            capProbability:
+              type: number
+              description: Real-world probability (0..1) the stock finishes above the call strike at expiration, i.e. the upside cap binds.
+          required:
+          - putStrike
+          - callStrike
+          - netPremium
+          - annualCost
+          - annualCostPct
+          - maxLoss
+          - upsideCap
+          - upsideCapPct
+          - isZeroCost
+          - capProbability
+        putSpread:
+          type: object
+          description: 'Put debit spread: long put at the protection floor financed by a short put at a lower strike. Cheaper than the bare put and needs no short call (so it works on unexercised employee options a collar cannot cover), but protection stops at the short strike and losses resume below it. The short strike is solved so the real-world probability the stock ENDS below it equals spreadRiskLevel.'
+          properties:
+            available:
+              type: boolean
+              description: 'False when no useful spread exists at these inputs: the 1-in-N short strike lands at/above the floor (floor already deep for this risk level) or the short leg does not reduce cost. When false, the numeric fields of this block are null and unavailableReason carries the explanation in their place.'
+            unavailableReason:
+              type:
+              - string
+              - 'null'
+              enum:
+              - floor
+              - no-rebate
+              - null
+              description: Why the spread is unavailable; null when available. 'floor' = the solved short strike sits at/above the protection floor (or within 1% of position of it). 'no-rebate' = the short leg does not strictly reduce cost.
+            longStrike:
+              type: number
+              description: Long put strike in dollars (same floor as the bare put).
+            longPremium:
+              type: number
+              description: Long put premium in dollars for the full tenor (same as barePut.premium).
+            shortStrike:
+              type: number
+              description: Short put strike in dollars, solved so P(end below it) = spreadRiskLevel.
+            shortPremium:
+              type: number
+              description: Short put premium in dollars received for the full tenor.
+            shortSigma:
+              type: number
+              description: Annualized sigma used to price the short leg, as a decimal (equals volatility in flat-sigma mode).
+            netPremium:
+              type: number
+              description: 'Net debit in dollars: long premium - short premium, floored at 0.'
+            annualCost:
+              type: number
+              description: Net premium annualized, in dollars per year.
+            annualCostPct:
+              type: number
+              description: Annualized net premium as a fraction of position value.
+            maxLossInBand:
+              type: number
+              description: 'Loss in dollars if the stock ends anywhere inside the protected band (floor holds): position - longStrike + netPremium. Below the short strike, losses resume dollar-for-dollar on top of this.'
+            bandWidth:
+              type: number
+              description: 'Width of the protected band in dollars: longStrike - shortStrike (the spread max payout).'
+            shortStrikeDropPct:
+              type: number
+              description: Short strike as a drawdown from spot, as a fraction of position value.
+            breachProbability:
+              type: number
+              description: Achieved real-world probability (0..1) the stock ends below the short strike; approximately spreadRiskLevel after the solve.
+            riskLevel:
+              type: number
+              description: The spreadRiskLevel preset the solve targeted (0.20 / 0.10 / 0.05 / 0.01), after snapping.
+            savingsPct:
+              type: number
+              description: 'Fraction of the bare put premium rebated by the short leg: shortPremium / longPremium.'
+            coveredLossAtBadYear:
+              type: number
+              description: Dollars the spread pays at the bad-year price, capped at bandWidth; 0 when the bad-year drop never reaches the floor.
+          required:
+          - available
+          - unavailableReason
+          - longStrike
+          - longPremium
+          - shortStrike
+          - shortPremium
+          - shortSigma
+          - netPremium
+          - annualCost
+          - annualCostPct
+          - maxLossInBand
+          - bandWidth
+          - shortStrikeDropPct
+          - breachProbability
+          - riskLevel
+          - savingsPct
+          - coveredLossAtBadYear
+        payoffTable:
+          type: array
+          description: Terminal P&L in dollars at each 10%-step drawdown across payoffRange, for the bare put, the collar, the put spread, and the unhedged position.
+          items:
+            type: object
+            properties:
+              drawdownPct:
+                type: number
+                description: Price move as a fraction of spot (-0.30 = down 30%, 0.2 = up 20%).
+              barePutPnl:
+                type: number
+                description: Position + put P&L in dollars at this move.
+              collarPnl:
+                type: number
+                description: Position + collar P&L in dollars at this move.
+              spreadPnl:
+                type:
+                - number
+                - 'null'
+                description: Position + put-spread P&L in dollars at this move. null (serialized from NaN) when putSpread.available is false.
+              unhedgedPnl:
+                type: number
+                description: Unhedged position P&L in dollars at this move.
+            required:
+            - drawdownPct
+            - barePutPnl
+            - collarPnl
+            - spreadPnl
+            - unhedgedPnl
+        payoffRange:
+          type: object
+          description: Price-move range covered by payoffTable, extended at least 15% beyond each collar arm and at least +/-50%.
+          properties:
+            lowerPct:
+              type: number
+              description: Lower bound of the modeled price move, as a fraction of spot (negative).
+            upperPct:
+              type: number
+              description: Upper bound of the modeled price move, as a fraction of spot.
+          required:
+          - lowerPct
+          - upperPct
+        recommended:
+          type: string
+          enum:
+          - collar
+          - protective-put
+          - put-spread
+          - none
+          description: 'Suggested structure, in triage order: collar unless its cap binds too often (>20% probability); then protective-put unless the put is expensive; then put-spread when one is available and cleanly priced (cheaper by construction); none when nothing is clean. The recommended structure is the one whose card carries no warning.'
+      required:
+      - inputs
+      - riskFreeRate
+      - realWorldDrift
+      - barePut
+      - collar
+      - putSpread
+      - payoffTable
+      - payoffRange
+      - recommended
+    SectorKey:
+      type: string
+      enum:
+      - tech_software
+      - semiconductors
+      - consumer_cyclical
+      - consumer_defensive
+      - financials
+      - healthcare_biotech
+      - energy
+      - industrials
+      - communication
+      - broad_market
+externalDocs:
+  description: Integration surface, citation guidance, and roadmap
+  url: https://optionsahoy.com/for-agents

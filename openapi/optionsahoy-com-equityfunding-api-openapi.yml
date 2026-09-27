@@ -1,0 +1,1353 @@
+openapi: 3.2.0
+info:
+  title: OptionsAhoy Calculator Equity Funding API
+  summary: Deterministic equity-compensation calculator endpoints. JSON in, JSON out.
+  description: Multi-year equity-compensation optimization engine.
+  version: 1.10.1
+  contact:
+    name: AlphaLatitude Inc.
+    email: andrew@alphalatitude.com
+    url: https://optionsahoy.com/for-agents
+  license:
+    name: Proprietary. Free for non-commercial use during beta.
+    url: https://optionsahoy.com/terms
+servers:
+- url: https://optionsahoy.com
+  description: Production
+tags:
+- name: EquityFunding
+  description: Goal-funded equity-to-cash liquidation planning
+paths:
+  /api/v1/equity-funding:
+    post:
+      summary: 'Multi-plan equity-funding comparison: Lock-in-now / Balanced / Hold-for-growth…'
+      description: Returns four named plans on the risk/wealth frontier plus the full hybrid frontier. It searches for the optimum through a bracket-aware sweep over sale years, months, and lots, and the schedule is measured from the current date; lognormal price exposure drives the shortfall probability; after-tax retained-share value acts as a backstop in the shortfall calculation. The `recommended` plan is the wealth-maximal plan whose shortfall is at or below `riskToleranceShortfall` (default 0.10). Wealth-at-target is compared apples-to-apples on after-tax basis (cash netted plus after-tax retained-share value, both compounded at the after-tax cash-interest rate).
+      operationId: planEquityFunding
+      tags:
+      - EquityFunding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquityFundingInput'
+            example:
+              targetAfterTax: 200000
+              targetDate: '2028-01-01'
+              ordinaryIncome: 200000
+              filingStatus: single
+              stateCode: CA
+              cashInterestRate: 0.04
+              stacks:
+              - currentPrice: 100
+                expectedAnnualGrowth: 0.08
+                volatility: 0.4
+                lots:
+                - shares: 2000
+                  costBasisPerShare: 20
+                  acquisitionDate: '2022-01-01'
+      responses:
+        '200':
+          $ref: '#/components/responses/EquityFundingSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+components:
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    EquityFundingSuccess:
+      description: Successful equity_funding_plan result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/EquityFundingResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              recommended:
+                planKey: recommended
+                planLabel: Recommended
+                plan:
+                  feasible: false
+                  targetAfterTax: 200000
+                  targetDateISO: '2028-01-01'
+                  totalAfterTaxAchieved: 172762.61
+                  totalSharesSold: 2000
+                  totalGrossProceeds: 224834.72
+                  totalTaxes:
+                    federal: 27725.21
+                    state: 17323.19
+                    niit: 7023.72
+                    total: 52072.11
+                  schedule:
+                  - year: 2028
+                    saleDateISO: '2028-01-01'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 2000
+                      grossProceeds: 224834.7247426237
+                      gainAmount: 184834.7247426237
+                      isLongTerm: true
+                      federalTax: 27725.208711393552
+                      stateTax: 17323.186648490242
+                      niit: 7023.7195402197
+                      netCash: 172762.60984252018
+                    yearGrossProceeds: 224834.7247426237
+                    yearTotalTax: 52072.1149001035
+                    yearNetCash: 172762.60984252018
+                    runningCumulativeNet: 172762.60984252018
+                  comparison:
+                    sellAllInTargetYearTotalTax: 52072.11
+                    sellAllInTargetYearAfterTax: 172762.61
+                    optimizedSavingsVsTargetYearSale: 0
+                    optimizedSavingsPct: 0
+                  remainingShares: 0
+                  remainingPositionValue: 0
+                  remainingPositionAfterTax: 0
+                  remainingNetByStack:
+                  - 0
+                  shortfall:
+                    maxAchievableAfterTax: 172762.61
+                    gap: 27237.39
+                wealthAtTarget: 172762.61
+                totalTax: 52072.11
+                shortfallProbability: 0.7065737034819962
+              lockInNow:
+                planKey: lock_in_now
+                planLabel: Lock in now
+                plan:
+                  feasible: false
+                  targetAfterTax: 200000
+                  targetDateISO: '2028-01-01'
+                  totalAfterTaxAchieved: 161374.58
+                  totalSharesSold: 2000
+                  totalGrossProceeds: 200000
+                  totalTaxes:
+                    federal: 24000
+                    state: 14880
+                    niit: 6080
+                    total: 44960
+                  schedule:
+                  - year: 2026
+                    saleDateISO: '2026-06-24'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 2000
+                      grossProceeds: 200000
+                      gainAmount: 160000
+                      isLongTerm: true
+                      federalTax: 24000
+                      stateTax: 14880.000000000004
+                      niit: 6080
+                      netCash: 155040
+                    yearGrossProceeds: 200000
+                    yearTotalTax: 44960
+                    yearNetCash: 155040
+                    runningCumulativeNet: 161374.5830146192
+                  comparison:
+                    sellAllInTargetYearTotalTax: 52072.11
+                    sellAllInTargetYearAfterTax: 172762.61
+                    optimizedSavingsVsTargetYearSale: 7112.11
+                    optimizedSavingsPct: 0.1366
+                  remainingShares: 0
+                  remainingPositionValue: 0
+                  remainingPositionAfterTax: 0
+                  remainingNetByStack:
+                  - 0
+                  shortfall:
+                    maxAchievableAfterTax: 161374.58
+                    gap: 38625.42
+                wealthAtTarget: 161374.58
+                totalTax: 44960
+                shortfallProbability: 1
+              balanced:
+                planKey: balanced
+                planLabel: Balanced
+                plan:
+                  feasible: false
+                  targetAfterTax: 200000
+                  targetDateISO: '2028-01-01'
+                  totalAfterTaxAchieved: 170526.91
+                  totalSharesSold: 2000
+                  totalGrossProceeds: 219666.61
+                  totalTaxes:
+                    federal: 26949.99
+                    state: 16708.99
+                    niit: 6827.33
+                    total: 50486.32
+                  schedule:
+                  - year: 2027
+                    saleDateISO: '2027-04-30'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 21347.750096335527
+                      gainAmount: 17347.750096335527
+                      isLongTerm: true
+                      federalTax: 2602.1625144503305
+                      stateTax: 1613.3407589592025
+                      niit: 659.2145036607508
+                      netCash: 16473.032319265243
+                    yearGrossProceeds: 21347.750096335527
+                    yearTotalTax: 4874.717777070284
+                    yearNetCash: 16473.032319265243
+                    runningCumulativeNet: 16767.766624449803
+                  - year: 2027
+                    saleDateISO: '2027-05-31'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 21487.64879643726
+                      gainAmount: 17487.64879643726
+                      isLongTerm: true
+                      federalTax: 2623.147319465588
+                      stateTax: 1626.3513380686709
+                      niit: 664.5306542646167
+                      netCash: 16573.619484638384
+                    yearGrossProceeds: 21487.64879643726
+                    yearTotalTax: 4914.029311798876
+                    yearNetCash: 16573.619484638384
+                    runningCumulativeNet: 33600.26178276821
+                  - year: 2027
+                    saleDateISO: '2027-06-30'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 21623.907490844624
+                      gainAmount: 17623.907490844624
+                      isLongTerm: true
+                      federalTax: 2643.5861236266937
+                      stateTax: 1639.0233966485503
+                      niit: 669.7084846520947
+                      netCash: 16671.589485917284
+                    yearGrossProceeds: 21623.907490844624
+                    yearTotalTax: 4952.318004927339
+                    yearNetCash: 16671.589485917284
+                    runningCumulativeNet: 50495.67875238137
+                  - year: 2027
+                    saleDateISO: '2027-07-31'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 21765.615939530675
+                      gainAmount: 17765.615939530675
+                      isLongTerm: true
+                      federalTax: 2664.8423909296016
+                      stateTax: 1652.202282376351
+                      niit: 675.0934057021659
+                      netCash: 16773.47786052256
+                    yearGrossProceeds: 21765.615939530675
+                    yearTotalTax: 4992.138079008118
+                    yearNetCash: 16773.47786052256
+                    runningCumulativeNet: 67456.40680012487
+                  - year: 2027
+                    saleDateISO: '2027-08-31'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 21908.25304944216
+                      gainAmount: 17908.25304944216
+                      isLongTerm: true
+                      federalTax: 2686.237957416324
+                      stateTax: 1665.4675335981228
+                      niit: 680.5136158788027
+                      netCash: 16876.033942548907
+                    yearGrossProceeds: 21908.25304944216
+                    yearTotalTax: 5032.21910689325
+                    yearNetCash: 16876.033942548907
+                    runningCumulativeNet: 84482.74381092469
+                  - year: 2027
+                    saleDateISO: '2027-09-30'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 22047.178903338194
+                      gainAmount: 18047.178903338194
+                      isLongTerm: true
+                      federalTax: 2707.0768355007294
+                      stateTax: 1678.387638010452
+                      niit: 685.7927983268505
+                      netCash: 16975.92163150016
+                    yearGrossProceeds: 22047.178903338194
+                    yearTotalTax: 5071.2572718380325
+                    yearNetCash: 16975.92163150016
+                    runningCumulativeNet: 101572.85816603321
+                  - year: 2027
+                    saleDateISO: '2027-10-31'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 22191.661186275203
+                      gainAmount: 18191.661186275203
+                      isLongTerm: true
+                      federalTax: 2728.7491779412803
+                      stateTax: 1691.8244903235936
+                      niit: 691.2831250784584
+                      netCash: 17079.80439293187
+                    yearGrossProceeds: 22191.661186275203
+                    yearTotalTax: 5111.856793343332
+                    yearNetCash: 17079.80439293187
+                    runningCumulativeNet: 118729.1712873145
+                  - year: 2027
+                    saleDateISO: '2027-11-30'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 22332.384203884918
+                      gainAmount: 18332.384203884918
+                      isLongTerm: true
+                      federalTax: 2749.8576305827373
+                      stateTax: 1704.9117309612957
+                      niit: 696.6305997476264
+                      netCash: 17180.98424259326
+                    yearGrossProceeds: 22332.384203884918
+                    yearTotalTax: 5151.39996129166
+                    yearNetCash: 17180.98424259326
+                    runningCumulativeNet: 135949.83487907657
+                  - year: 2027
+                    saleDateISO: '2027-12-31'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 22478.735529256308
+                      gainAmount: 18478.735529256308
+                      isLongTerm: true
+                      federalTax: 2771.810329388446
+                      stateTax: 1718.5224042208392
+                      niit: 702.1919501117396
+                      netCash: 17286.210845535283
+                    yearGrossProceeds: 22478.735529256308
+                    yearTotalTax: 5192.524683721025
+                    yearNetCash: 17286.210845535283
+                    runningCumulativeNet: 153237.29190514903
+                  - year: 2028
+                    saleDateISO: '2028-01-01'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 200
+                      grossProceeds: 22483.47247426237
+                      gainAmount: 18483.47247426237
+                      isLongTerm: true
+                      federalTax: 2772.520871139355
+                      stateTax: 1718.9629401064012
+                      niit: 702.37195402197
+                      netCash: 17289.616708994643
+                    yearGrossProceeds: 22483.47247426237
+                    yearTotalTax: 5193.855765267726
+                    yearNetCash: 17289.616708994643
+                    runningCumulativeNet: 170526.90861414367
+                  comparison:
+                    sellAllInTargetYearTotalTax: 52072.11
+                    sellAllInTargetYearAfterTax: 172762.61
+                    optimizedSavingsVsTargetYearSale: 1585.8
+                    optimizedSavingsPct: 0.0305
+                  remainingShares: 0
+                  remainingPositionValue: 0
+                  remainingPositionAfterTax: 0
+                  remainingNetByStack:
+                  - 0
+                  shortfall:
+                    maxAchievableAfterTax: 170526.91
+                    gap: 29473.09
+                wealthAtTarget: 170526.91
+                totalTax: 50486.32
+                shortfallProbability: 0.719622773437159
+                lockInFraction: 0
+              holdForGrowth:
+                planKey: hold_for_growth
+                planLabel: Hold for growth
+                plan:
+                  feasible: false
+                  targetAfterTax: 200000
+                  targetDateISO: '2028-01-01'
+                  totalAfterTaxAchieved: 172762.61
+                  totalSharesSold: 2000
+                  totalGrossProceeds: 224834.72
+                  totalTaxes:
+                    federal: 27725.21
+                    state: 17323.19
+                    niit: 7023.72
+                    total: 52072.11
+                  schedule:
+                  - year: 2028
+                    saleDateISO: '2028-01-01'
+                    sales:
+                    - stackIndex: 0
+                      lotIndex: 0
+                      shares: 2000
+                      grossProceeds: 224834.7247426237
+                      gainAmount: 184834.7247426237
+                      isLongTerm: true
+                      federalTax: 27725.208711393552
+                      stateTax: 17323.186648490242
+                      niit: 7023.7195402197
+                      netCash: 172762.60984252018
+                    yearGrossProceeds: 224834.7247426237
+                    yearTotalTax: 52072.1149001035
+                    yearNetCash: 172762.60984252018
+                    runningCumulativeNet: 172762.60984252018
+                  comparison:
+                    sellAllInTargetYearTotalTax: 52072.11
+                    sellAllInTargetYearAfterTax: 172762.61
+                    optimizedSavingsVsTargetYearSale: 0
+                    optimizedSavingsPct: 0
+                  remainingShares: 0
+                  remainingPositionValue: 0
+                  remainingPositionAfterTax: 0
+                  remainingNetByStack:
+                  - 0
+                  shortfall:
+                    maxAchievableAfterTax: 172762.61
+                    gap: 27237.39
+                wealthAtTarget: 172762.61
+                totalTax: 52072.11
+                shortfallProbability: 0.7065737034819962
+              frontier: []
+              targetAfterTax: 200000
+              targetDateISO: '2028-01-01'
+              appliedRiskTolerance: 0.1
+  schemas:
+    EquityFundingResult:
+      type: object
+      description: 'Equity-funding plan comparison: four named plans plus the full risk/wealth frontier. All dollar amounts are USD.'
+      properties:
+        recommended:
+          type: object
+          description: The wealth-maximal plan whose shortfall probability is at or below the applied risk tolerance. This is the plan the risk tolerance selects out of the frontier.
+          properties:
+            planKey:
+              type: string
+              enum:
+              - recommended
+              - lock_in_now
+              - balanced
+              - hold_for_growth
+              - candidate
+              description: Plan identifier. "candidate" entries appear only inside frontier.
+            planLabel:
+              type: string
+              description: Human-readable plan name.
+            plan:
+              type: object
+              description: The full sale schedule for this plan. Nested year/sale entries follow the shapes described here and may carry additional fields.
+              properties:
+                feasible:
+                  type: boolean
+                  description: True when the schedule reaches the after-tax target by the target date.
+                targetAfterTax:
+                  type: number
+                  description: Echo of the requested net cash target in dollars.
+                targetDateISO:
+                  type: string
+                  description: Echo of the target date as an ISO date string.
+                totalAfterTaxAchieved:
+                  type: number
+                  description: Net after-tax cash in dollars the schedule produces by the target date (including after-tax cash interest when cashInterestRate is set).
+                totalSharesSold:
+                  type: number
+                  description: Total shares sold across the schedule.
+                totalGrossProceeds:
+                  type: number
+                  description: Total gross sale proceeds in dollars.
+                totalTaxes:
+                  type: object
+                  description: Tax totals across all scheduled sales, in dollars.
+                  properties:
+                    federal:
+                      type: number
+                      description: Federal capital gains / ordinary tax in dollars.
+                    state:
+                      type: number
+                      description: State tax in dollars.
+                    niit:
+                      type: number
+                      description: Net Investment Income Tax (3.8%) in dollars.
+                    total:
+                      type: number
+                      description: Total tax in dollars.
+                  required:
+                  - federal
+                  - state
+                  - niit
+                  - total
+                schedule:
+                  type: array
+                  description: 'Per-year sale schedule. Each entry: year, saleDateISO, sales (array of per-lot entries: stackIndex, ticker, lotIndex, shares, grossProceeds, gainAmount, isLongTerm, federalTax, stateTax, niit, netCash), yearGrossProceeds, yearTotalTax, yearNetCash, runningCumulativeNet.'
+                  items:
+                    type: object
+                    additionalProperties: true
+                comparison:
+                  type: object
+                  description: This schedule vs the naive sell-everything-in-the-target-year alternative.
+                  properties:
+                    sellAllInTargetYearTotalTax:
+                      type: number
+                      description: Tax in dollars if all needed shares were sold in the target year.
+                    sellAllInTargetYearAfterTax:
+                      type: number
+                      description: After-tax cash in dollars under that naive plan.
+                    optimizedSavingsVsTargetYearSale:
+                      type: number
+                      description: Tax saved in dollars by this schedule vs the naive plan.
+                    optimizedSavingsPct:
+                      type: number
+                      description: Tax saved as a fraction of the naive plan tax.
+                  required:
+                  - sellAllInTargetYearTotalTax
+                  - sellAllInTargetYearAfterTax
+                  - optimizedSavingsVsTargetYearSale
+                  - optimizedSavingsPct
+                remainingShares:
+                  type: number
+                  description: Shares retained after all scheduled sales.
+                remainingPositionValue:
+                  type: number
+                  description: Market value in dollars of retained shares at the projected target-date price.
+                remainingPositionAfterTax:
+                  type: number
+                  description: After-tax value in dollars of liquidating all retained shares at the target date (the cash backstop if scheduled sales come in light).
+                remainingNetByStack:
+                  type: array
+                  items:
+                    type: number
+                  description: Per-stack after-tax retained value in dollars, parallel to the input stacks array.
+                shortfall:
+                  type: object
+                  description: Present only when the target is not reachable from the available inventory.
+                  properties:
+                    maxAchievableAfterTax:
+                      type: number
+                      description: Maximum after-tax cash in dollars achievable by the target date.
+                    gap:
+                      type: number
+                      description: Dollars short of the target.
+                  required:
+                  - maxAchievableAfterTax
+                  - gap
+              required:
+              - feasible
+              - targetAfterTax
+              - targetDateISO
+              - totalAfterTaxAchieved
+              - totalSharesSold
+              - totalGrossProceeds
+              - totalTaxes
+              - schedule
+              - comparison
+              - remainingShares
+              - remainingPositionValue
+              - remainingPositionAfterTax
+              - remainingNetByStack
+            wealthAtTarget:
+              type: number
+              description: 'Total wealth in dollars at the target date: net cash plus retained shares at the projected price. The metric the recommendation maximizes.'
+            totalTax:
+              type: number
+              description: Total tax paid across the plan in dollars.
+            shortfallProbability:
+              type: number
+              description: Lognormal probability (0..1) that realized cash lands below the target. 0 means a deterministic hit (sell everything today).
+            lockInFraction:
+              type: number
+              description: Fraction (0..1) of the target locked in by an immediate sale, for hybrid candidates. Omitted on pure named plans.
+          required:
+          - planKey
+          - planLabel
+          - plan
+          - wealthAtTarget
+          - totalTax
+          - shortfallProbability
+        lockInNow:
+          type: object
+          description: 'Sell everything needed in the current calendar year: minimum price risk, usually highest tax.'
+          properties:
+            planKey:
+              type: string
+              enum:
+              - recommended
+              - lock_in_now
+              - balanced
+              - hold_for_growth
+              - candidate
+              description: Plan identifier. "candidate" entries appear only inside frontier.
+            planLabel:
+              type: string
+              description: Human-readable plan name.
+            plan:
+              type: object
+              description: The full sale schedule for this plan. Nested year/sale entries follow the shapes described here and may carry additional fields.
+              properties:
+                feasible:
+                  type: boolean
+                  description: True when the schedule reaches the after-tax target by the target date.
+                targetAfterTax:
+                  type: number
+                  description: Echo of the requested net cash target in dollars.
+                targetDateISO:
+                  type: string
+                  description: Echo of the target date as an ISO date string.
+                totalAfterTaxAchieved:
+                  type: number
+                  description: Net after-tax cash in dollars the schedule produces by the target date (including after-tax cash interest when cashInterestRate is set).
+                totalSharesSold:
+                  type: number
+                  description: Total shares sold across the schedule.
+                totalGrossProceeds:
+                  type: number
+                  description: Total gross sale proceeds in dollars.
+                totalTaxes:
+                  type: object
+                  description: Tax totals across all scheduled sales, in dollars.
+                  properties:
+                    federal:
+                      type: number
+                      description: Federal capital gains / ordinary tax in dollars.
+                    state:
+                      type: number
+                      description: State tax in dollars.
+                    niit:
+                      type: number
+                      description: Net Investment Income Tax (3.8%) in dollars.
+                    total:
+                      type: number
+                      description: Total tax in dollars.
+                  required:
+                  - federal
+                  - state
+                  - niit
+                  - total
+                schedule:
+                  type: array
+                  description: 'Per-year sale schedule. Each entry: year, saleDateISO, sales (array of per-lot entries: stackIndex, ticker, lotIndex, shares, grossProceeds, gainAmount, isLongTerm, federalTax, stateTax, niit, netCash), yearGrossProceeds, yearTotalTax, yearNetCash, runningCumulativeNet.'
+                  items:
+                    type: object
+                    additionalProperties: true
+                comparison:
+                  type: object
+                  description: This schedule vs the naive sell-everything-in-the-target-year alternative.
+                  properties:
+                    sellAllInTargetYearTotalTax:
+                      type: number
+                      description: Tax in dollars if all needed shares were sold in the target year.
+                    sellAllInTargetYearAfterTax:
+                      type: number
+                      description: After-tax cash in dollars under that naive plan.
+                    optimizedSavingsVsTargetYearSale:
+                      type: number
+                      description: Tax saved in dollars by this schedule vs the naive plan.
+                    optimizedSavingsPct:
+                      type: number
+                      description: Tax saved as a fraction of the naive plan tax.
+                  required:
+                  - sellAllInTargetYearTotalTax
+                  - sellAllInTargetYearAfterTax
+                  - optimizedSavingsVsTargetYearSale
+                  - optimizedSavingsPct
+                remainingShares:
+                  type: number
+                  description: Shares retained after all scheduled sales.
+                remainingPositionValue:
+                  type: number
+                  description: Market value in dollars of retained shares at the projected target-date price.
+                remainingPositionAfterTax:
+                  type: number
+                  description: After-tax value in dollars of liquidating all retained shares at the target date (the cash backstop if scheduled sales come in light).
+                remainingNetByStack:
+                  type: array
+                  items:
+                    type: number
+                  description: Per-stack after-tax retained value in dollars, parallel to the input stacks array.
+                shortfall:
+                  type: object
+                  description: Present only when the target is not reachable from the available inventory.
+                  properties:
+                    maxAchievableAfterTax:
+                      type: number
+                      description: Maximum after-tax cash in dollars achievable by the target date.
+                    gap:
+                      type: number
+                      description: Dollars short of the target.
+                  required:
+                  - maxAchievableAfterTax
+                  - gap
+              required:
+              - feasible
+              - targetAfterTax
+              - targetDateISO
+              - totalAfterTaxAchieved
+              - totalSharesSold
+              - totalGrossProceeds
+              - totalTaxes
+              - schedule
+              - comparison
+              - remainingShares
+              - remainingPositionValue
+              - remainingPositionAfterTax
+              - remainingNetByStack
+            wealthAtTarget:
+              type: number
+              description: 'Total wealth in dollars at the target date: net cash plus retained shares at the projected price. The metric the recommendation maximizes.'
+            totalTax:
+              type: number
+              description: Total tax paid across the plan in dollars.
+            shortfallProbability:
+              type: number
+              description: Lognormal probability (0..1) that realized cash lands below the target. 0 means a deterministic hit (sell everything today).
+            lockInFraction:
+              type: number
+              description: Fraction (0..1) of the target locked in by an immediate sale, for hybrid candidates. Omitted on pure named plans.
+          required:
+          - planKey
+          - planLabel
+          - plan
+          - wealthAtTarget
+          - totalTax
+          - shortfallProbability
+        balanced:
+          type: object
+          description: 'Bracket-aware spread across all candidate years: minimum tax.'
+          properties:
+            planKey:
+              type: string
+              enum:
+              - recommended
+              - lock_in_now
+              - balanced
+              - hold_for_growth
+              - candidate
+              description: Plan identifier. "candidate" entries appear only inside frontier.
+            planLabel:
+              type: string
+              description: Human-readable plan name.
+            plan:
+              type: object
+              description: The full sale schedule for this plan. Nested year/sale entries follow the shapes described here and may carry additional fields.
+              properties:
+                feasible:
+                  type: boolean
+                  description: True when the schedule reaches the after-tax target by the target date.
+                targetAfterTax:
+                  type: number
+                  description: Echo of the requested net cash target in dollars.
+                targetDateISO:
+                  type: string
+                  description: Echo of the target date as an ISO date string.
+                totalAfterTaxAchieved:
+                  type: number
+                  description: Net after-tax cash in dollars the schedule produces by the target date (including after-tax cash interest when cashInterestRate is set).
+                totalSharesSold:
+                  type: number
+                  description: Total shares sold across the schedule.
+                totalGrossProceeds:
+                  type: number
+                  description: Total gross sale proceeds in dollars.
+                totalTaxes:
+                  type: object
+                  description: Tax totals across all scheduled sales, in dollars.
+                  properties:
+                    federal:
+                      type: number
+                      description: Federal capital gains / ordinary tax in dollars.
+                    state:
+                      type: number
+                      description: State tax in dollars.
+                    niit:
+                      type: number
+                      description: Net Investment Income Tax (3.8%) in dollars.
+                    total:
+                      type: number
+                      description: Total tax in dollars.
+                  required:
+                  - federal
+                  - state
+                  - niit
+                  - total
+                schedule:
+                  type: array
+                  description: 'Per-year sale schedule. Each entry: year, saleDateISO, sales (array of per-lot entries: stackIndex, ticker, lotIndex, shares, grossProceeds, gainAmount, isLongTerm, federalTax, stateTax, niit, netCash), yearGrossProceeds, yearTotalTax, yearNetCash, runningCumulativeNet.'
+                  items:
+                    type: object
+                    additionalProperties: true
+                comparison:
+                  type: object
+                  description: This schedule vs the naive sell-everything-in-the-target-year alternative.
+                  properties:
+                    sellAllInTargetYearTotalTax:
+                      type: number
+                      description: Tax in dollars if all needed shares were sold in the target year.
+                    sellAllInTargetYearAfterTax:
+                      type: number
+                      description: After-tax cash in dollars under that naive plan.
+                    optimizedSavingsVsTargetYearSale:
+                      type: number
+                      description: Tax saved in dollars by this schedule vs the naive plan.
+                    optimizedSavingsPct:
+                      type: number
+                      description: Tax saved as a fraction of the naive plan tax.
+                  required:
+                  - sellAllInTargetYearTotalTax
+                  - sellAllInTargetYearAfterTax
+                  - optimizedSavingsVsTargetYearSale
+                  - optimizedSavingsPct
+                remainingShares:
+                  type: number
+                  description: Shares retained after all scheduled sales.
+                remainingPositionValue:
+                  type: number
+                  description: Market value in dollars of retained shares at the projected target-date price.
+                remainingPositionAfterTax:
+                  type: number
+                  description: After-tax value in dollars of liquidating all retained shares at the target date (the cash backstop if scheduled sales come in light).
+                remainingNetByStack:
+                  type: array
+                  items:
+                    type: number
+                  description: Per-stack after-tax retained value in dollars, parallel to the input stacks array.
+                shortfall:
+                  type: object
+                  description: Present only when the target is not reachable from the available inventory.
+                  properties:
+                    maxAchievableAfterTax:
+                      type: number
+                      description: Maximum after-tax cash in dollars achievable by the target date.
+                    gap:
+                      type: number
+                      description: Dollars short of the target.
+                  required:
+                  - maxAchievableAfterTax
+                  - gap
+              required:
+              - feasible
+              - targetAfterTax
+              - targetDateISO
+              - totalAfterTaxAchieved
+              - totalSharesSold
+              - totalGrossProceeds
+              - totalTaxes
+              - schedule
+              - comparison
+              - remainingShares
+              - remainingPositionValue
+              - remainingPositionAfterTax
+              - remainingNetByStack
+            wealthAtTarget:
+              type: number
+              description: 'Total wealth in dollars at the target date: net cash plus retained shares at the projected price. The metric the recommendation maximizes.'
+            totalTax:
+              type: number
+              description: Total tax paid across the plan in dollars.
+            shortfallProbability:
+              type: number
+              description: Lognormal probability (0..1) that realized cash lands below the target. 0 means a deterministic hit (sell everything today).
+            lockInFraction:
+              type: number
+              description: Fraction (0..1) of the target locked in by an immediate sale, for hybrid candidates. Omitted on pure named plans.
+          required:
+          - planKey
+          - planLabel
+          - plan
+          - wealthAtTarget
+          - totalTax
+          - shortfallProbability
+        holdForGrowth:
+          type: object
+          description: 'Sell only in the target year: maximum expected wealth, maximum price risk.'
+          properties:
+            planKey:
+              type: string
+              enum:
+              - recommended
+              - lock_in_now
+              - balanced
+              - hold_for_growth
+              - candidate
+              description: Plan identifier. "candidate" entries appear only inside frontier.
+            planLabel:
+              type: string
+              description: Human-readable plan name.
+            plan:
+              type: object
+              description: The full sale schedule for this plan. Nested year/sale entries follow the shapes described here and may carry additional fields.
+              properties:
+                feasible:
+                  type: boolean
+                  description: True when the schedule reaches the after-tax target by the target date.
+                targetAfterTax:
+                  type: number
+                  description: Echo of the requested net cash target in dollars.
+                targetDateISO:
+                  type: string
+                  description: Echo of the target date as an ISO date string.
+                totalAfterTaxAchieved:
+                  type: number
+                  description: Net after-tax cash in dollars the schedule produces by the target date (including after-tax cash interest when cashInterestRate is set).
+                totalSharesSold:
+                  type: number
+                  description: Total shares sold across the schedule.
+                totalGrossProceeds:
+                  type: number
+                  description: Total gross sale proceeds in dollars.
+                totalTaxes:
+                  type: object
+                  description: Tax totals across all scheduled sales, in dollars.
+                  properties:
+                    federal:
+                      type: number
+                      description: Federal capital gains / ordinary tax in dollars.
+                    state:
+                      type: number
+                      description: State tax in dollars.
+                    niit:
+                      type: number
+                      description: Net Investment Income Tax (3.8%) in dollars.
+                    total:
+                      type: number
+                      description: Total tax in dollars.
+                  required:
+                  - federal
+                  - state
+                  - niit
+                  - total
+                schedule:
+                  type: array
+                  description: 'Per-year sale schedule. Each entry: year, saleDateISO, sales (array of per-lot entries: stackIndex, ticker, lotIndex, shares, grossProceeds, gainAmount, isLongTerm, federalTax, stateTax, niit, netCash), yearGrossProceeds, yearTotalTax, yearNetCash, runningCumulativeNet.'
+                  items:
+                    type: object
+                    additionalProperties: true
+                comparison:
+                  type: object
+                  description: This schedule vs the naive sell-everything-in-the-target-year alternative.
+                  properties:
+                    sellAllInTargetYearTotalTax:
+                      type: number
+                      description: Tax in dollars if all needed shares were sold in the target year.
+                    sellAllInTargetYearAfterTax:
+                      type: number
+                      description: After-tax cash in dollars under that naive plan.
+                    optimizedSavingsVsTargetYearSale:
+                      type: number
+                      description: Tax saved in dollars by this schedule vs the naive plan.
+                    optimizedSavingsPct:
+                      type: number
+                      description: Tax saved as a fraction of the naive plan tax.
+                  required:
+                  - sellAllInTargetYearTotalTax
+                  - sellAllInTargetYearAfterTax
+                  - optimizedSavingsVsTargetYearSale
+                  - optimizedSavingsPct
+                remainingShares:
+                  type: number
+                  description: Shares retained after all scheduled sales.
+                remainingPositionValue:
+                  type: number
+                  description: Market value in dollars of retained shares at the projected target-date price.
+                remainingPositionAfterTax:
+                  type: number
+                  description: After-tax value in dollars of liquidating all retained shares at the target date (the cash backstop if scheduled sales come in light).
+                remainingNetByStack:
+                  type: array
+                  items:
+                    type: number
+                  description: Per-stack after-tax retained value in dollars, parallel to the input stacks array.
+                shortfall:
+                  type: object
+                  description: Present only when the target is not reachable from the available inventory.
+                  properties:
+                    maxAchievableAfterTax:
+                      type: number
+                      description: Maximum after-tax cash in dollars achievable by the target date.
+                    gap:
+                      type: number
+                      description: Dollars short of the target.
+                  required:
+                  - maxAchievableAfterTax
+                  - gap
+              required:
+              - feasible
+              - targetAfterTax
+              - targetDateISO
+              - totalAfterTaxAchieved
+              - totalSharesSold
+              - totalGrossProceeds
+              - totalTaxes
+              - schedule
+              - comparison
+              - remainingShares
+              - remainingPositionValue
+              - remainingPositionAfterTax
+              - remainingNetByStack
+            wealthAtTarget:
+              type: number
+              description: 'Total wealth in dollars at the target date: net cash plus retained shares at the projected price. The metric the recommendation maximizes.'
+            totalTax:
+              type: number
+              description: Total tax paid across the plan in dollars.
+            shortfallProbability:
+              type: number
+              description: Lognormal probability (0..1) that realized cash lands below the target. 0 means a deterministic hit (sell everything today).
+            lockInFraction:
+              type: number
+              description: Fraction (0..1) of the target locked in by an immediate sale, for hybrid candidates. Omitted on pure named plans.
+          required:
+          - planKey
+          - planLabel
+          - plan
+          - wealthAtTarget
+          - totalTax
+          - shortfallProbability
+        frontier:
+          type: array
+          items:
+            type: object
+            description: One sale plan on the risk/wealth frontier.
+            properties:
+              planKey:
+                type: string
+                enum:
+                - recommended
+                - lock_in_now
+                - balanced
+                - hold_for_growth
+                - candidate
+                description: Plan identifier. "candidate" entries appear only inside frontier.
+              planLabel:
+                type: string
+                description: Human-readable plan name.
+              plan:
+                type: object
+                description: The full sale schedule for this plan. Nested year/sale entries follow the shapes described here and may carry additional fields.
+                properties:
+                  feasible:
+                    type: boolean
+                    description: True when the schedule reaches the after-tax target by the target date.
+                  targetAfterTax:
+                    type: number
+                    description: Echo of the requested net cash target in dollars.
+                  targetDateISO:
+                    type: string
+                    description: Echo of the target date as an ISO date string.
+                  totalAfterTaxAchieved:
+                    type: number
+                    description: Net after-tax cash in dollars the schedule produces by the target date (including after-tax cash interest when cashInterestRate is set).
+                  totalSharesSold:
+                    type: number
+                    description: Total shares sold across the schedule.
+                  totalGrossProceeds:
+                    type: number
+                    description: Total gross sale proceeds in dollars.
+                  totalTaxes:
+                    type: object
+                    description: Tax totals across all scheduled sales, in dollars.
+                    properties:
+                      federal:
+                        type: number
+                        description: Federal capital gains / ordinary tax in dollars.
+                      state:
+                        type: number
+                        description: State tax in dollars.
+                      niit:
+                        type: number
+                        description: Net Investment Income Tax (3.8%) in dollars.
+                      total:
+                        type: number
+                        description: Total tax in dollars.
+                    required:
+                    - federal
+                    - state
+                    - niit
+                    - total
+                  schedule:
+                    type: array
+                    description: 'Per-year sale schedule. Each entry: year, saleDateISO, sales (array of per-lot entries: stackIndex, ticker, lotIndex, shares, grossProceeds, gainAmount, isLongTerm, federalTax, stateTax, niit, netCash), yearGrossProceeds, yearTotalTax, yearNetCash, runningCumulativeNet.'
+                    items:
+                      type: object
+                      additionalProperties: true
+                  comparison:
+                    type: object
+                    description: This schedule vs the naive sell-everything-in-the-target-year alternative.
+                    properties:
+                      sellAllInTargetYearTotalTax:
+                        type: number
+                        description: Tax in dollars if all needed shares were sold in the target year.
+                      sellAllInTargetYearAfterTax:
+                        type: number
+                        description: After-tax cash in dollars under that naive plan.
+                      optimizedSavingsVsTargetYearSale:
+                        type: number
+                        description: Tax saved in dollars by this schedule vs the naive plan.
+                      optimizedSavingsPct:
+                        type: number
+                        description: Tax saved as a fraction of the naive plan tax.
+                    required:
+                    - sellAllInTargetYearTotalTax
+                    - sellAllInTargetYearAfterTax
+                    - optimizedSavingsVsTargetYearSale
+                    - optimizedSavingsPct
+                  remainingShares:
+                    type: number
+                    description: Shares retained after all scheduled sales.
+                  remainingPositionValue:
+                    type: number
+                    description: Market value in dollars of retained shares at the projected target-date price.
+                  remainingPositionAfterTax:
+                    type: number
+                    description: After-tax value in dollars of liquidating all retained shares at the target date (the cash backstop if scheduled sales come in light).
+                  remainingNetByStack:
+                    type: array
+                    items:
+                      type: number
+                    description: Per-stack after-tax retained value in dollars, parallel to the input stacks array.
+                  shortfall:
+                    type: object
+                    description: Present only when the target is not reachable from the available inventory.
+                    properties:
+                      maxAchievableAfterTax:
+                        type: number
+                        description: Maximum after-tax cash in dollars achievable by the target date.
+                      gap:
+                        type: number
+                        description: Dollars short of the target.
+                    required:
+                    - maxAchievableAfterTax
+                    - gap
+                required:
+                - feasible
+                - targetAfterTax
+                - targetDateISO
+                - totalAfterTaxAchieved
+                - totalSharesSold
+                - totalGrossProceeds
+                - totalTaxes
+                - schedule
+                - comparison
+                - remainingShares
+                - remainingPositionValue
+                - remainingPositionAfterTax
+                - remainingNetByStack
+              wealthAtTarget:
+                type: number
+                description: 'Total wealth in dollars at the target date: net cash plus retained shares at the projected price. The metric the recommendation maximizes.'
+              totalTax:
+                type: number
+                description: Total tax paid across the plan in dollars.
+              shortfallProbability:
+                type: number
+                description: Lognormal probability (0..1) that realized cash lands below the target. 0 means a deterministic hit (sell everything today).
+              lockInFraction:
+                type: number
+                description: Fraction (0..1) of the target locked in by an immediate sale, for hybrid candidates. Omitted on pure named plans.
+            required:
+            - planKey
+            - planLabel
+            - plan
+            - wealthAtTarget
+            - totalTax
+            - shortfallProbability
+          description: All candidate plans from the hybrid lock-in sweep plus the named plans, sorted by shortfall probability.
+        targetAfterTax:
+          type: number
+          description: Echo of the requested net cash target in dollars.
+        targetDateISO:
+          type: string
+          description: Echo of the target date as an ISO date string.
+        appliedRiskTolerance:
+          type: number
+          description: Shortfall-probability tolerance actually applied (default 0.10 when not supplied).
+      required:
+      - recommended
+      - lockInNow
+      - balanced
+      - holdForGrowth
+      - frontier
+      - targetAfterTax
+      - targetDateISO
+      - appliedRiskTolerance
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    EquityFundingInput:
+      type: object
+      description: Either `stacks` (v1.7+ multi-stack) OR legacy top-level `lots` + `currentPrice` (single-stack) must be provided.
+      required:
+      - targetAfterTax
+      - targetDate
+      - ordinaryIncome
+      - filingStatus
+      - stateCode
+      anyOf:
+      - required:
+        - stacks
+      - required:
+        - lots
+        - currentPrice
+      properties:
+        targetAfterTax:
+          type: number
+          minimum: 0
+        targetDate:
+          $ref: '#/components/schemas/IsoDate'
+        stacks:
+          type: array
+          minItems: 1
+          description: v1.7+ multi-stack input. Each stack is one ticker.
+          items:
+            type: object
+            required:
+            - currentPrice
+            - lots
+            properties:
+              ticker:
+                type: string
+                description: Optional ticker label. When set without `expectedAnnualGrowth`, the server resolves growth from the trailing-CAGR table.
+              currentPrice:
+                type: number
+                minimum: 0
+              expectedAnnualGrowth:
+                type:
+                - number
+                - string
+                description: Per-stack growth decimal (0.08 = 8%/yr), or the string "market" for the S&P 500 trailing average. Required unless `ticker` resolves it; omitting it is an error, not a flat default. Pass 0 for a deliberately flat-price plan.
+              volatility:
+                type: number
+                minimum: 0
+                description: Per-stack annualized σ. Overrides `defaultVolatility` for this stack.
+                maximum: 5
+              lots:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  required:
+                  - shares
+                  - costBasisPerShare
+                  - acquisitionDate
+                  properties:
+                    shares:
+                      type: integer
+                      minimum: 1
+                    costBasisPerShare:
+                      type: number
+                      minimum: 0
+                    acquisitionDate:
+                      $ref: '#/components/schemas/IsoDate'
+                    vestDate:
+                      $ref: '#/components/schemas/IsoDate'
+                      description: Optional. Future vest date for unvested RSU tranches; excluded from sales whose date precedes this.
+        lots:
+          type: array
+          minItems: 1
+          description: Legacy single-stack input (v1.5 / v1.6). Pair with top-level currentPrice.
+          items:
+            type: object
+            required:
+            - shares
+            - costBasisPerShare
+            - acquisitionDate
+            properties:
+              shares:
+                type: integer
+                minimum: 1
+              costBasisPerShare:
+                type: number
+                minimum: 0
+              acquisitionDate:
+                $ref: '#/components/schemas/IsoDate'
+        currentPrice:
+          type: number
+          minimum: 0
+          description: Legacy single-stack current share price.
+        expectedAnnualGrowth:
+          type:
+          - number
+          - string
+          description: 'Legacy single-stack annual growth decimal, or the string "market" for the S&P 500 trailing average. Required with legacy `lots`: pass 0 for a deliberately flat-price plan (omitting it is an error, not a flat default).'
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        cashInterestRate:
+          type: number
+          description: Annualized pre-tax yield on cash held between each sale and the target date. The server compounds at the after-tax marginal rate. Defaults to 0.
+        riskToleranceShortfall:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Max acceptable P(realized cash < target) under the lognormal price model. The `recommended` plan is the wealth-maximal plan whose shortfall is at or below this value. Default 0.10.
+        defaultVolatility:
+          type: number
+          minimum: 0
+          description: Annualized σ used for stacks that omit their own `volatility`. Default 0.30.
+          maximum: 5
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+externalDocs:
+  description: Integration surface, citation guidance, and roadmap
+  url: https://optionsahoy.com/for-agents

@@ -1,0 +1,407 @@
+openapi: 3.2.0
+info:
+  title: OptionsAhoy Calculator NSO API
+  summary: Deterministic equity-compensation calculator endpoints. JSON in, JSON out.
+  description: Multi-year equity-compensation optimization engine.
+  version: 1.10.1
+  contact:
+    name: AlphaLatitude Inc.
+    email: andrew@alphalatitude.com
+    url: https://optionsahoy.com/for-agents
+  license:
+    name: Proprietary. Free for non-commercial use during beta.
+    url: https://optionsahoy.com/terms
+servers:
+- url: https://optionsahoy.com
+  description: Production
+tags:
+- name: NSO
+  description: Non-qualified stock options
+paths:
+  /api/v1/nso:
+    post:
+      summary: NSO exercise tax + sell-vs-hold
+      description: 'Computes the after-tax payout on a non-qualified stock option (NSO) exercise: federal, state, FICA (Social Security + Medicare + Additional Medicare). Compares selling at exercise vs. holding for long-term capital gains across the chosen horizon.'
+      operationId: calculateNso
+      tags:
+      - NSO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NsoInput'
+            example:
+              shares: 5000
+              strike: 10
+              currentPrice: 50
+              expectedSalePrice: 80
+              expectedMarketReturn: 0.07
+              ordinaryIncome: 180000
+              filingStatus: single
+              stateCode: CA
+              stillEmployed: true
+              holdYears: 2
+              volatility: 0.3
+              holdFunding: cash
+      responses:
+        '200':
+          $ref: '#/components/responses/NsoSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+components:
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    NsoSuccess:
+      description: Successful nso_calculate result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/NsoResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              exercise:
+                bargainElement: 200000
+                federal: 65971.25
+                state: 18685.210000000003
+                socialSecurity: 279
+                medicare: 2900
+                additionalMedicare: 1619.9999999999998
+                total: 89455.46
+                netCashSellAll: 110544.54
+              bracketJump:
+                fromRate: 0.24
+                toRate: 0.35
+                thresholdAtJump: 201775
+              hold:
+                funding: cash
+                costBasis: 50
+                strikeCost: 50000
+                cashNeededAtExercise: 139455.46000000002
+                sharesSoldToCover: 0
+                sharesRetained: 5000
+                effectiveSalePrice: 73.11449482169826
+                expectedGain: 115572.4741084913
+                ltcgFederal: 20967.625132396366
+                ltcgState: 10748.240092089694
+                ltcgTotal: 31715.86522448606
+                afterTaxProceedsAtSale: 333856.6088840052
+                y0OutflowGain: 20207.096154000006
+                y0OutflowLtcgFederal: 3038.934076952001
+                y0OutflowLtcgState: 1879.259942322
+                y0OutflowLtcgTotal: 4918.194019274
+                y0OutflowForgoneNet: 15288.902134726006
+                netAtYearN: 179112.2467492792
+              sellNowInvest:
+                netCashAtY0: 110544.54
+                marketGain: 16017.903846000003
+                ltcgFederal: 2402.6855769000003
+                ltcgState: 1489.6650576780012
+                ltcgTotal: 3892.3506345780015
+                netAtYearN: 122670.09321142199
+              holdMinusCashless: 56442.153537857215
+  schemas:
+    NsoInput:
+      type: object
+      required:
+      - shares
+      - strike
+      - currentPrice
+      - ordinaryIncome
+      - filingStatus
+      - stateCode
+      - stillEmployed
+      - holdYears
+      - holdFunding
+      properties:
+        shares:
+          type: integer
+          minimum: 1
+        strike:
+          type: number
+          minimum: 0
+        currentPrice:
+          type: number
+          minimum: 0
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        stillEmployed:
+          type: boolean
+          description: FICA applies only when true.
+        holdYears:
+          type: number
+          minimum: 1
+          description: Hold horizon. Sub-1-year is short-term and out of scope.
+        expectedSalePrice:
+          type:
+          - number
+          - string
+          minimum: 0
+          description: Expected sale price at horizon, USD per share. Required unless `ticker` resolves it from currentPrice × (1 + trailing CAGR)^holdYears. Also accepts the string "market" to project currentPrice at the S&P 500 trailing average.
+        haircut:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Volatility-drag haircut on expectedSalePrice. Either this OR `volatility` is required; if both are supplied, `haircut` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma). Either this OR `haircut` is required; if both are supplied, `haircut` wins. Derived haircut = 1 - exp(-(sigma^2 / 2) * holdYears).
+          maximum: 5
+        expectedMarketReturn:
+          type:
+          - number
+          - string
+          description: Per-year median market return rate (vol-drag pre-applied). Defaults to SPY trailing CAGR for holdYears if omitted. The string "market" names that same default explicitly.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
+        holdFunding:
+          type: string
+          enum:
+          - sell-to-cover
+          - cash
+    NsoResult:
+      type: object
+      description: NSO exercise sell-vs-hold result. All dollar amounts are USD.
+      properties:
+        exercise:
+          type: object
+          description: Tax bill at exercise on the bargain element (taxed as ordinary W-2 income).
+          properties:
+            bargainElement:
+              type: number
+              description: shares x (currentPrice - strike) in dollars, taxed as ordinary income at exercise.
+            federal:
+              type: number
+              description: Federal ordinary income tax on the bargain element in dollars.
+            state:
+              type: number
+              description: State income tax on the bargain element in dollars.
+            socialSecurity:
+              type: number
+              description: Social Security tax in dollars (0 when not employed or already past the wage base).
+            medicare:
+              type: number
+              description: Medicare tax in dollars.
+            additionalMedicare:
+              type: number
+              description: Additional Medicare (0.9%) tax in dollars.
+            total:
+              type: number
+              description: Total tax at exercise in dollars.
+            netCashSellAll:
+              type: number
+              description: 'bargainElement - total: net cash in dollars if every share is sold at exercise.'
+          required:
+          - bargainElement
+          - federal
+          - state
+          - socialSecurity
+          - medicare
+          - additionalMedicare
+          - total
+          - netCashSellAll
+        bracketJump:
+          type:
+          - object
+          - 'null'
+          description: Marginal federal bracket change caused by the new ordinary income; null when the income stays within one bracket.
+          properties:
+            fromRate:
+              type: number
+              description: Marginal federal rate before the event, as a decimal (0.24 = 24%).
+            toRate:
+              type: number
+              description: Marginal federal rate after the event, as a decimal.
+            thresholdAtJump:
+              type: number
+              description: Taxable-income threshold in dollars where the bracket changes.
+          required:
+          - fromRate
+          - toRate
+          - thresholdAtJump
+        hold:
+          type: object
+          description: Exercise now and hold the shares holdYears for long-term capital gains treatment.
+          properties:
+            funding:
+              type: string
+              enum:
+              - sell-to-cover
+              - cash
+              description: How strike cost and exercise tax are funded (echo of holdFunding).
+            costBasis:
+              type: number
+              description: Cost basis per share in dollars (the FMV at exercise).
+            strikeCost:
+              type: number
+              description: 'Total strike cost in dollars: shares x strike.'
+            cashNeededAtExercise:
+              type: number
+              description: Outside cash required at exercise in dollars (strike + tax under cash funding; 0 under sell-to-cover).
+            sharesSoldToCover:
+              type: number
+              description: Shares sold at exercise to cover strike + tax (sell-to-cover only; 0 in cash mode).
+            sharesRetained:
+              type: number
+              description: Shares still held after funding the exercise.
+            effectiveSalePrice:
+              type: number
+              description: Projected sale price per share in dollars at end of holdYears, after the volatility haircut.
+            expectedGain:
+              type: number
+              description: Expected capital gain in dollars on the retained shares at sale.
+            ltcgFederal:
+              type: number
+              description: Federal long-term capital gains tax (including NIIT) on the gain in dollars.
+            ltcgState:
+              type: number
+              description: State capital gains tax on the gain in dollars.
+            ltcgTotal:
+              type: number
+              description: Total capital gains tax at sale in dollars.
+            afterTaxProceedsAtSale:
+              type: number
+              description: After-tax sale proceeds in dollars at end of holdYears.
+            y0OutflowGain:
+              type: number
+              description: Opportunity-cost gain in dollars the year-0 cash outflow would have earned at the market rate (cash funding only; 0 for sell-to-cover).
+            y0OutflowLtcgFederal:
+              type: number
+              description: Federal capital gains tax in dollars on the forgone market gain (cash funding only).
+            y0OutflowLtcgState:
+              type: number
+              description: State capital gains tax in dollars on the forgone market gain (cash funding only).
+            y0OutflowLtcgTotal:
+              type: number
+              description: Total capital gains tax in dollars on the forgone market gain (cash funding only).
+            y0OutflowForgoneNet:
+              type: number
+              description: 'After-tax market growth forgone in dollars by spending cash at exercise: y0OutflowGain - y0OutflowLtcgTotal.'
+            netAtYearN:
+              type: number
+              description: Net after-tax value of the hold strategy in dollars at end of holdYears (after subtracting forgone market growth).
+          required:
+          - funding
+          - costBasis
+          - strikeCost
+          - cashNeededAtExercise
+          - sharesSoldToCover
+          - sharesRetained
+          - effectiveSalePrice
+          - expectedGain
+          - ltcgFederal
+          - ltcgState
+          - ltcgTotal
+          - afterTaxProceedsAtSale
+          - y0OutflowGain
+          - y0OutflowLtcgFederal
+          - y0OutflowLtcgState
+          - y0OutflowLtcgTotal
+          - y0OutflowForgoneNet
+          - netAtYearN
+        sellNowInvest:
+          type: object
+          description: 'Counterfactual: sell every share at exercise and reinvest the net cash at expectedMarketReturn for holdYears.'
+          properties:
+            netCashAtY0:
+              type: number
+              description: Net cash in dollars after exercise tax, available to reinvest.
+            marketGain:
+              type: number
+              description: Market growth in dollars on the reinvested cash over holdYears.
+            ltcgFederal:
+              type: number
+              description: Federal capital gains tax (including NIIT) in dollars on the market gain at the horizon.
+            ltcgState:
+              type: number
+              description: State capital gains tax in dollars on the market gain.
+            ltcgTotal:
+              type: number
+              description: Total capital gains tax in dollars on the market gain.
+            netAtYearN:
+              type: number
+              description: Net after-tax value of sell-now-and-invest in dollars at end of holdYears.
+          required:
+          - netCashAtY0
+          - marketGain
+          - ltcgFederal
+          - ltcgState
+          - ltcgTotal
+          - netAtYearN
+        holdMinusCashless:
+          type: number
+          description: hold.netAtYearN - sellNowInvest.netAtYearN in dollars. Positive favors holding the shares; negative favors selling at exercise and reinvesting.
+      required:
+      - exercise
+      - bracketJump
+      - hold
+      - sellNowInvest
+      - holdMinusCashless
+    Ticker:
+      type: string
+      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+externalDocs:
+  description: Integration surface, citation guidance, and roadmap
+  url: https://optionsahoy.com/for-agents

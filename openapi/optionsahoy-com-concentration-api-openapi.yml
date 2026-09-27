@@ -1,0 +1,733 @@
+openapi: 3.2.0
+info:
+  title: OptionsAhoy Calculator Concentration API
+  summary: Deterministic equity-compensation calculator endpoints. JSON in, JSON out.
+  description: Multi-year equity-compensation optimization engine.
+  version: 1.10.1
+  contact:
+    name: AlphaLatitude Inc.
+    email: andrew@alphalatitude.com
+    url: https://optionsahoy.com/for-agents
+  license:
+    name: Proprietary. Free for non-commercial use during beta.
+    url: https://optionsahoy.com/terms
+servers:
+- url: https://optionsahoy.com
+  description: Production
+tags:
+- name: Concentration
+  description: Single-stock concentration risk
+paths:
+  /api/v1/concentration:
+    post:
+      summary: Single-stock concentration risk
+      description: 'Quantifies single-stock concentration risk: drawdown exposure at 30/50/70% scenarios and the after-tax comparison of selling down vs. holding vs. hedging, with multi-year tax math.'
+      operationId: calculateConcentration
+      tags:
+      - Concentration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConcentrationInput'
+            example:
+              positionValue: 400000
+              costBasis: 100000
+              acquisitionDate: '2022-01-01'
+              sector: tech_software
+              stateCode: CA
+              filingStatus: single
+              ordinaryIncome: 200000
+              totalAssets: 1200000
+              volatility: 0.45
+              expectedPositionReturn: 0.1
+              expectedMarketReturn: 0.07
+      responses:
+        '200':
+          $ref: '#/components/responses/ConcentrationSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+components:
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    ConcentrationSuccess:
+      description: Successful concentration_analyze result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/ConcentrationResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              concentration: 0.3333333333333333
+              riskBand: Concentrated
+              isLongTermToday: true
+              longTermDate: '2023-01-02T00:00:00.000Z'
+              daysUntilLongTerm: 0
+              lossExposure:
+              - drop: 0.3
+                dollarLoss: 120000
+                newConcentration: 0.25925925925925924
+              - drop: 0.5
+                dollarLoss: 200000
+                newConcentration: 0.2
+              - drop: 0.7
+                dollarLoss: 280000
+                newConcentration: 0.13043478260869565
+              waitForLtInsight: null
+              schedule:
+              - planKey: lump_sum
+                planLabel: Sell over 1 year
+                yearlySales:
+                - year: 1
+                  saleAmount: 399729.11491267144
+                  gainAmount: 299729.11491267144
+                  isLongTerm: true
+                  federalTax: 56349.073603582234
+                  stateTax: 29696.88998513187
+                  totalTax: 86045.9635887141
+                  breakdown:
+                  - label: Federal LTCG
+                    rate: 0.15
+                    amount: 299729.11491267144
+                    tax: 44959.36723690072
+                  - label: NIIT
+                    rate: 0.038
+                    amount: 299729.11491267144
+                    tax: 11389.706366681514
+                  - label: CA
+                    rate: 0.093
+                    amount: 171479
+                    tax: 15947.547
+                  - label: CA
+                    rate: 0.103
+                    amount: 74292
+                    tax: 7652.076
+                  - label: CA
+                    rate: 0.113
+                    amount: 53958.114912671444
+                    tax: 6097.266985131873
+                totalSale: 399729.11491267144
+                totalTax: 86045.9635887141
+                endOfHorizonWealth: 1350554.3624649164
+                savingsVsLumpSum: 81.53641128589516
+                wealthVsLumpSum: -13987.346552583855
+                year1IsShortTerm: false
+                taxBreakdown:
+                - label: Federal LTCG
+                  rate: 0.15
+                  amount: 299729.11491267144
+                  tax: 44959.36723690072
+                - label: NIIT
+                  rate: 0.038
+                  amount: 299729.11491267144
+                  tax: 11389.706366681514
+                - label: CA
+                  rate: 0.093
+                  amount: 171479
+                  tax: 15947.547
+                - label: CA
+                  rate: 0.103
+                  amount: 74292
+                  tax: 7652.076
+                - label: CA
+                  rate: 0.113
+                  amount: 53958.114912671444
+                  tax: 6097.266985131873
+                wealthByYear:
+                - 1200000
+                - 1179626.4848151945
+                - 1262200.338752258
+                - 1350554.3624649164
+              - planKey: two_year
+                planLabel: Sell over 2 years
+                yearlySales:
+                - year: 1
+                  saleAmount: 199864.55745633572
+                  gainAmount: 149864.55745633572
+                  isLongTerm: true
+                  federalTax: 28174.536801791117
+                  stateTax: 13937.403843439228
+                  totalTax: 42111.940645230345
+                  breakdown:
+                  - label: Federal LTCG
+                    rate: 0.15
+                    amount: 149864.55745633572
+                    tax: 22479.68361845036
+                  - label: NIIT
+                    rate: 0.038
+                    amount: 149864.55745633572
+                    tax: 5694.853183340757
+                  - label: CA
+                    rate: 0.093
+                    amount: 149864.55745633572
+                    tax: 13937.403843439222
+                - year: 2
+                  saleAmount: 199614.72675951532
+                  gainAmount: 149614.72675951532
+                  isLongTerm: true
+                  federalTax: 28127.568630788883
+                  stateTax: 13914.16958863493
+                  totalTax: 42041.738219423816
+                  breakdown:
+                  - label: Federal LTCG
+                    rate: 0.15
+                    amount: 149614.72675951532
+                    tax: 22442.2090139273
+                  - label: NIIT
+                    rate: 0.038
+                    amount: 149614.72675951532
+                    tax: 5685.359616861582
+                  - label: CA
+                    rate: 0.093
+                    amount: 149614.72675951532
+                    tax: 13914.169588634924
+                totalSale: 399479.28421585105
+                totalTax: 84153.67886465415
+                endOfHorizonWealth: 1340318.0844518472
+                savingsVsLumpSum: 1973.8211353458464
+                wealthVsLumpSum: -24223.624565653037
+                year1IsShortTerm: false
+                taxBreakdown:
+                - label: Federal LTCG
+                  rate: 0.15
+                  amount: 299479.28421585105
+                  tax: 44921.892632377654
+                - label: NIIT
+                  rate: 0.038
+                  amount: 299479.28421585105
+                  tax: 11380.212800202338
+                - label: CA
+                  rate: 0.093
+                  amount: 299479.28421585105
+                  tax: 27851.573432074147
+                wealthByYear:
+                - 1200000
+                - 1218503.1623343432
+                - 1252633.723786773
+                - 1340318.0844518472
+              - planKey: three_year
+                planLabel: Sell over 3 years
+                yearlySales:
+                - year: 1
+                  saleAmount: 133243.03830422385
+                  gainAmount: 99909.70497089053
+                  isLongTerm: true
+                  federalTax: 18783.02453452742
+                  stateTax: 9291.602562292821
+                  totalTax: 28074.62709682024
+                  breakdown:
+                  - label: Federal LTCG
+                    rate: 0.15
+                    amount: 99909.70497089053
+                    tax: 14986.455745633579
+                  - label: NIIT
+                    rate: 0.038
+                    amount: 99909.70497089053
+                    tax: 3796.56878889384
+                  - label: CA
+                    rate: 0.093
+                    amount: 99909.70497089053
+                    tax: 9291.60256229282
+                - year: 2
+                  saleAmount: 133076.48450634358
+                  gainAmount: 99743.15117301025
+                  isLongTerm: true
+                  federalTax: 18751.712420525924
+                  stateTax: 9276.113059089956
+                  totalTax: 28027.82547961588
+                  breakdown:
+                  - label: Federal LTCG
+                    rate: 0.15
+                    amount: 99743.15117301025
+                    tax: 14961.472675951536
+                  - label: NIIT
+                    rate: 0.038
+                    amount: 99743.15117301024
+                    tax: 3790.239744574389
+                  - label: CA
+                    rate: 0.093
+                    amount: 99743.15117301025
+                    tax: 9276.113059089954
+                - year: 3
+                  saleAmount: 132910.13890071065
+                  gainAmount: 99576.80556737732
+                  isLongTerm: true
+                  federalTax: 18720.439446666936
+                  stateTax: 9260.64291776609
+                  totalTax: 27981.082364433027
+                  breakdown:
+                  - label: Federal LTCG
+                    rate: 0.15
+                    amount: 99576.80556737732
+                    tax: 14936.520835106598
+                  - label: NIIT
+                    rate: 0.038
+                    amount: 99576.8055673773
+                    tax: 3783.9186115603375
+                  - label: CA
+                    rate: 0.093
+                    amount: 99576.80556737732
+                    tax: 9260.64291776609
+                totalSale: 399229.661711278
+                totalTax: 84083.53494086914
+                endOfHorizonWealth: 1328478.6892989082
+                savingsVsLumpSum: 2043.96505913086
+                wealthVsLumpSum: -36063.019718592055
+                year1IsShortTerm: false
+                taxBreakdown:
+                - label: Federal LTCG
+                  rate: 0.15
+                  amount: 299229.6617112781
+                  tax: 44884.44925669171
+                - label: NIIT
+                  rate: 0.038
+                  amount: 299229.6617112781
+                  tax: 11370.727145028566
+                - label: CA
+                  rate: 0.093
+                  amount: 299229.6617112781
+                  tax: 27828.358539148863
+                wealthByYear:
+                - 1200000
+                - 1230835.441556229
+                - 1273396.0241911819
+                - 1328478.6892989082
+              hedging:
+                kind: put
+                protectionLevel: 0.30000000000000004
+                tenorYears: 1
+                strike: 280000
+                putPrice: 14759.629358774771
+                netPremium: 14759.629358774771
+                sigma: 0.45
+                riskFreeRate: 0.045
+              sectorContextLine: Tech / Software single names hit a 50%+ peak-to-trough drawdown in roughly 1 of every 5 rolling 3-year windows over 2014–2024. Even mega-caps aren’t exempt.
+              advisorBenchmarkLine: Most fee-only advisors target ≤10% in any single name. You're at 33%.
+  schemas:
+    ConcentrationResult:
+      type: object
+      description: Single-stock concentration analysis. All dollar amounts are USD.
+      properties:
+        concentration:
+          type: number
+          description: Position value / total assets, 0..1.
+        riskBand:
+          type: string
+          enum:
+          - Low
+          - Moderate
+          - Concentrated
+          - Highly concentrated
+          - Extreme
+          description: Qualitative concentration band for the position weight.
+        isLongTermToday:
+          type: boolean
+          description: True when the position already qualifies for long-term capital gains treatment.
+        longTermDate:
+          type: string
+          description: Date the position turns long-term (acquisitionDate + 1 year). ISO 8601 date-time string.
+        daysUntilLongTerm:
+          type: number
+          description: Days until long-term treatment; 0 when already long-term.
+        lossExposure:
+          type: array
+          description: Dollar damage at 30/50/70% single-stock drawdowns.
+          items:
+            type: object
+            properties:
+              drop:
+                type: number
+                description: Modeled drawdown as a fraction of position value (0.30, 0.50, 0.70).
+              dollarLoss:
+                type: number
+                description: Dollars lost at this drawdown.
+              newConcentration:
+                type: number
+                description: Portfolio concentration (0..1) after the drawdown.
+            required:
+            - drop
+            - dollarLoss
+            - newConcentration
+        waitForLtInsight:
+          type:
+          - object
+          - 'null'
+          description: Tax saved by waiting for long-term treatment before selling; null when already long-term or no sale is needed.
+          properties:
+            longTermDate:
+              type: string
+              description: Date the position turns long-term. ISO 8601 date-time string.
+            daysAway:
+              type: number
+              description: Days until that date.
+            immediateLumpSumTax:
+              type: number
+              description: Tax in dollars on the full sell-down executed today (short-term rates).
+            delayedLumpSumTax:
+              type: number
+              description: Tax in dollars on the same sale executed after the long-term date.
+            savings:
+              type: number
+              description: immediateLumpSumTax - delayedLumpSumTax in dollars (floored at 0).
+          required:
+          - longTermDate
+          - daysAway
+          - immediateLumpSumTax
+          - delayedLumpSumTax
+          - savings
+        schedule:
+          type: array
+          description: Sell-down plans over 1, 2, and 3 years; empty when the position is already at or below the target weight.
+          items:
+            type: object
+            properties:
+              planKey:
+                type: string
+                enum:
+                - lump_sum
+                - two_year
+                - three_year
+                description: Plan identifier.
+              planLabel:
+                type: string
+                description: Human-readable plan name, e.g. "Sell over 2 years".
+              yearlySales:
+                type: array
+                description: 'One entry per sale year: year (1-indexed), saleAmount, gainAmount, isLongTerm, federalTax, stateTax, totalTax in dollars, plus a per-slice breakdown.'
+                items:
+                  type: object
+                  properties:
+                    year:
+                      type: number
+                      description: Sale year, 1-indexed.
+                    saleAmount:
+                      type: number
+                      description: Dollars sold this year.
+                    gainAmount:
+                      type: number
+                      description: Taxable gain in dollars within the sale.
+                    isLongTerm:
+                      type: boolean
+                      description: True when this sale gets long-term capital gains treatment.
+                    federalTax:
+                      type: number
+                      description: Federal tax in dollars on this sale (including NIIT).
+                    stateTax:
+                      type: number
+                      description: State tax in dollars on this sale.
+                    totalTax:
+                      type: number
+                      description: Total tax in dollars on this sale.
+                    breakdown:
+                      type: array
+                      items:
+                        type: object
+                        description: 'One tax slice: a dollar amount taxed at one rate.'
+                        properties:
+                          label:
+                            type: string
+                            description: Tax line label, e.g. "Federal LTCG", "NIIT", "California".
+                          rate:
+                            type: number
+                            description: Rate applied to this slice as a decimal (0.15 = 15%).
+                          amount:
+                            type: number
+                            description: Dollars of gain in this slice.
+                          tax:
+                            type: number
+                            description: 'Tax in dollars: amount x rate.'
+                        required:
+                        - label
+                        - rate
+                        - amount
+                        - tax
+                      description: Per-rate tax slices for this sale.
+                  required:
+                  - year
+                  - saleAmount
+                  - gainAmount
+                  - isLongTerm
+                  - federalTax
+                  - stateTax
+                  - totalTax
+                  - breakdown
+              totalSale:
+                type: number
+                description: Total nominal sale dollars across the plan years.
+              totalTax:
+                type: number
+                description: Total tax in dollars across the plan years.
+              endOfHorizonWealth:
+                type: number
+                description: Total after-tax wealth in dollars at the end of the 3-year comparison horizon.
+              savingsVsLumpSum:
+                type: number
+                description: Raw tax saved in dollars vs selling everything today; positive means this plan pays less tax.
+              wealthVsLumpSum:
+                type: number
+                description: End-of-horizon wealth delta in dollars vs the sell-everything-today baseline; positive means this plan ends wealthier.
+              year1IsShortTerm:
+                type: boolean
+                description: True when the first sale year would be taxed at short-term rates.
+              taxBreakdown:
+                type: array
+                items:
+                  type: object
+                  description: 'One tax slice: a dollar amount taxed at one rate.'
+                  properties:
+                    label:
+                      type: string
+                      description: Tax line label, e.g. "Federal LTCG", "NIIT", "California".
+                    rate:
+                      type: number
+                      description: Rate applied to this slice as a decimal (0.15 = 15%).
+                    amount:
+                      type: number
+                      description: Dollars of gain in this slice.
+                    tax:
+                      type: number
+                      description: 'Tax in dollars: amount x rate.'
+                  required:
+                  - label
+                  - rate
+                  - amount
+                  - tax
+                description: Plan-total tax slices, same-rate rows merged.
+              wealthByYear:
+                type: array
+                items:
+                  type: number
+                description: Total wealth in dollars at the end of each year, t = 0..3 (4 points). For charting.
+            required:
+            - planKey
+            - planLabel
+            - yearlySales
+            - totalSale
+            - totalTax
+            - endOfHorizonWealth
+            - savingsVsLumpSum
+            - wealthVsLumpSum
+            - year1IsShortTerm
+            - taxBreakdown
+            - wealthByYear
+        hedging:
+          type: object
+          description: Modeled cost of a protective hedge covering the full position. Defaults to a 1-year 30%-OTM put; if a `hedgeChoice` is supplied, this block prices that structure (kind / protectionLevel / tenorYears, plus a short call for a collar).
+          properties:
+            kind:
+              type: string
+              enum:
+              - put
+              - collar
+              description: 'Structure priced: "put" (default) or "collar" when a hedgeChoice with kind:"collar" and upsideCapPct was supplied.'
+            protectionLevel:
+              type: number
+              description: Floor as a fraction below spot (0.30 = a 30%-OTM put). Echoes hedgeChoice.protectionLevel, else 0.30.
+            tenorYears:
+              type: number
+              description: Hedge tenor in years. Echoes hedgeChoice.tenorYears, else 1.
+            strike:
+              type: number
+              description: Long put strike in dollars ((1 - protectionLevel) x position value).
+            putPrice:
+              type: number
+              description: Gross long-put premium in dollars for the tenor.
+            callStrike:
+              type: number
+              description: Collar short-call strike in dollars ((1 + upsideCapPct) x position value). Omitted for a put.
+            callPrice:
+              type: number
+              description: Collar short-call premium in dollars received. Omitted for a put.
+            netPremium:
+              type: number
+              description: 'Net premium paid in dollars: putPrice for a put, max(0, putPrice - callPrice) for a collar.'
+            sigma:
+              type: number
+              description: Annualized volatility used in pricing (explicit or ticker-implied vol, else a sector-typical implied volatility).
+            riskFreeRate:
+              type: number
+              description: Annualized risk-free rate used in pricing, as a decimal.
+          required:
+          - kind
+          - protectionLevel
+          - tenorYears
+          - strike
+          - putPrice
+          - netPremium
+          - sigma
+          - riskFreeRate
+        sectorContextLine:
+          type: string
+          description: One-line volatility/drawdown context for the chosen sector.
+        advisorBenchmarkLine:
+          type: string
+          description: One-line comparison of the user weight vs the common advisor 10% single-name guideline.
+      required:
+      - concentration
+      - riskBand
+      - isLongTermToday
+      - longTermDate
+      - daysUntilLongTerm
+      - lossExposure
+      - waitForLtInsight
+      - schedule
+      - hedging
+      - sectorContextLine
+      - advisorBenchmarkLine
+    Ticker:
+      type: string
+      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    ConcentrationInput:
+      type: object
+      required:
+      - positionValue
+      - costBasis
+      - acquisitionDate
+      - sector
+      - stateCode
+      - filingStatus
+      - ordinaryIncome
+      - totalAssets
+      properties:
+        positionValue:
+          type: number
+          minimum: 0
+          description: Current value of the concentrated position, USD.
+        costBasis:
+          type: number
+          minimum: 0
+        acquisitionDate:
+          $ref: '#/components/schemas/IsoDate'
+        sector:
+          $ref: '#/components/schemas/SectorKey'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        totalAssets:
+          type: number
+          minimum: 0
+          description: Total investable portfolio in dollars (concentrated position + everything else). User-supplied; never inferred.
+        expectedPositionReturn:
+          type:
+          - number
+          - string
+          description: Annual return on the concentrated stock. Required unless `ticker` resolves it from trailing CAGR. Also accepts the string "market" to use the S&P 500 trailing average when the user has no view.
+        expectedMarketReturn:
+          type:
+          - number
+          - string
+          description: Annual return on diversified holdings + reinvested proceeds. Defaults to SPY trailing CAGR for the 3-year horizon if omitted. The string "market" names that same default explicitly.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
+        volatilityDrag:
+          type: number
+          minimum: 0
+          maximum: 0.99
+          description: Multiplicative haircut on the 3y stock-price path. Either this OR `volatility` is required for drag; if both are supplied, `volatilityDrag` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma). Used for the closed-form option pricing hedging path AND, when `volatilityDrag` is omitted, derives drag = 1 - exp(-(sigma^2 / 2) * 3). Either this OR `volatilityDrag` is required for drag.
+          maximum: 5
+        hedgeChoice:
+          type: object
+          required:
+          - kind
+          - protectionLevel
+          - tenorYears
+          properties:
+            kind:
+              type: string
+              enum:
+              - put
+              - collar
+            protectionLevel:
+              type: number
+              minimum: 0.05
+              maximum: 0.5
+            tenorYears:
+              type: number
+              minimum: 0.25
+            upsideCapPct:
+              type: number
+    SectorKey:
+      type: string
+      enum:
+      - tech_software
+      - semiconductors
+      - consumer_cyclical
+      - consumer_defensive
+      - financials
+      - healthcare_biotech
+      - energy
+      - industrials
+      - communication
+      - broad_market
+externalDocs:
+  description: Integration surface, citation guidance, and roadmap
+  url: https://optionsahoy.com/for-agents

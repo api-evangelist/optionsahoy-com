@@ -1,5 +1,5 @@
 aid: optionsahoy-com
-name: AlphaLatitude Inc.
+name: OptionsAhoy
 description: >-
   AlphaLatitude Inc. is a Sunnyvale, California C-corporation (founded March 2026) that builds OptionsAhoy, an
   equity-compensation optimization product for individual investors: multi-year, multi-state tax planning for
@@ -33,7 +33,7 @@ tags:
 - Calculators
 - MCP
 - A2A
-- agent-native
+- Agent-Native
 - Deterministic
 - United States
 tags_raw:
@@ -49,54 +49,26 @@ tags_raw:
 - Agent-native
 - Deterministic
 - United States
+- agent-native
 apis:
-- aid: optionsahoy-com:optionsahoy-calculator-api
-  name: OptionsAhoy Calculator API
-  description: >-
-    Keyless, CORS-open REST API wrapping the eight OptionsAhoy equity-compensation calculators — multi-year
-    ISO/AMT exercise optimization, NSO exercise tax and sell-vs-hold, RSU sell-vs-hold, RSU lot-order
-    selection, single-stock concentration, protective put / zero-cost collar / put-spread pricing, Section
-    1202 QSBS qualification, and equity-funding plans for a cash goal — plus discovery, public usage stats and
-    a badge endpoint. 11 operations published as OpenAPI 3.1.0 at https://optionsahoy.com/openapi.json with
-    servers[] https://optionsahoy.com; JSON in, {ok, result, next_steps} out; every operation is a stateless
-    pure computation with federal + 50-state + DC tax tables compiled in.
-  humanURL: https://optionsahoy.com/for-agents/api
-  baseURL: https://optionsahoy.com/api/v1
-  tags:
-  - Equity Compensation
-  - Tax
-  - Stock Options
-  - Calculators
-  - Financial Planning
-  properties:
-  - type: OpenAPI
-    url: openapi/optionsahoy-com-openapi.json
-  - type: OpenAPI
-    name: OptionsAhoy Calculator API OpenAPI (provider-hosted)
-    url: https://optionsahoy.com/openapi.json
-  - type: Documentation
-    url: https://optionsahoy.com/for-agents
-  - type: APIReference
-    url: https://optionsahoy.com/for-agents/api
-  - type: Overlay
-    url: overlays/optionsahoy-com-openapi-overlay.yaml
-  - type: DataModel
-    url: data-model/optionsahoy-com-data-model.yml
-  - type: ErrorCatalog
-    url: errors/optionsahoy-com-problem-types.yml
 - aid: optionsahoy-com:optionsahoy-mcp-server
   name: OptionsAhoy MCP Server
   description: >-
     Remote Model Context Protocol server at https://optionsahoy.com/mcp (Streamable HTTP, protocol version
-    2024-11-05, serverInfo OptionsAhoy 1.10.2, no authentication). initialize, tools/list, resources/list and
-    prompts/list answer anonymously: eight tools with inputSchema, outputSchema and annotations (readOnlyHint,
-    idempotentHint true on all eight), nine resources including an Apps-SDK widget, and eight prompts. The
-    same server ships as the npm stdio package optionsahoy-mcp (npx -y optionsahoy-mcp), a Claude Desktop
-    .mcpb bundle and a Gemini CLI extension, and is listed in the Official MCP Registry, Smithery, Glama and
-    the GitHub MCP Registry. Open source (MIT) at https://github.com/AlvisoOculus/optionsahoy-mcp.
+    2024-11-05, serverInfo OptionsAhoy 1.10.2, no authentication). initialize, tools/list, resources/list
+    and prompts/list answer anonymously: eight tools with inputSchema, outputSchema and annotations (readOnlyHint,
+    idempotentHint true on all eight), nine resources including an Apps-SDK widget, and eight prompts.
+    The same server ships as the npm stdio package optionsahoy-mcp (npx -y optionsahoy-mcp), a Claude
+    Desktop .mcpb bundle and a Gemini CLI extension, and is listed in the Official MCP Registry, Smithery,
+    Glama and the GitHub MCP Registry. Open source (MIT) at https://github.com/AlvisoOculus/optionsahoy-mcp.
   humanURL: https://optionsahoy.com/for-agents
   baseURL: https://optionsahoy.com/mcp
   tags:
+  - MCP
+  - Agent-Native
+  - Equity Compensation
+  - Tax
+  tags_raw:
   - MCP
   - agent-native
   - Equity Compensation
@@ -115,15 +87,19 @@ apis:
   name: OptionsAhoy Equity Planner (A2A Agent)
   description: >-
     Agent2Agent (A2A) protocol surface: an agent card served from https://optionsahoy.com/.well-known/agent-card.json
-    (protocolVersion 0.3.0, JSONRPC transport, version 1.10.2, provider AlphaLatitude Inc.) advertising eight
-    skills whose ids are the eight MCP tool names, each run by sending a message with a DataPart
-    {"skill":"<id>","input":{...}} to the JSON-RPC endpoint at https://optionsahoy.com/a2a (message/send). The
-    endpoint answers JSON-RPC 2.0 (tasks/get returns -32001 with a note that every call completes
+    (protocolVersion 0.3.0, JSONRPC transport, version 1.10.2, provider AlphaLatitude Inc.) advertising
+    eight skills whose ids are the eight MCP tool names, each run by sending a message with a DataPart
+    {"skill":"<id>","input":{...}} to the JSON-RPC endpoint at https://optionsahoy.com/a2a (message/send).
+    The endpoint answers JSON-RPC 2.0 (tasks/get returns -32001 with a note that every call completes
     synchronously); streaming, push notifications and state-transition history are declared unsupported.
     Keyless.
   humanURL: https://optionsahoy.com/for-agents
   baseURL: https://optionsahoy.com/a2a
   tags:
+  - A2A
+  - Agent-Native
+  - Equity Compensation
+  tags_raw:
   - A2A
   - agent-native
   - Equity Compensation
@@ -133,6 +109,168 @@ apis:
   - type: AgentCard
     name: A2A Agent Card (provider-hosted)
     url: https://optionsahoy.com/.well-known/agent-card.json
+- aid: optionsahoy-com:optionsahoy-com-concentration-api
+  name: OptionsAhoy Concentration API
+  description: Single-stock concentration risk
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - Concentration
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-concentration-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-com-discovery-api
+  name: OptionsAhoy Discovery API
+  description: API inventory
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - Discovery
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-discovery-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-com-equityfunding-api
+  name: OptionsAhoy Equity Funding API
+  description: Goal-funded equity-to-cash liquidation planning
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - EquityFunding
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-equityfunding-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-com-hedging-api
+  name: OptionsAhoy Hedging API
+  description: Protective put, collar, and put spread pricing
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - Hedging
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-hedging-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-com-iso-api
+  name: OptionsAhoy ISO API
+  description: Incentive stock options
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - ISO
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-iso-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-com-nso-api
+  name: OptionsAhoy NSO API
+  description: Non-qualified stock options
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - NSO
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-nso-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-com-qsbs-api
+  name: OptionsAhoy QSBS API
+  description: Section 1202 qualification
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - QSBS
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-qsbs-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-com-rsu-api
+  name: OptionsAhoy RSU API
+  description: Restricted stock units
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - RSU
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-rsu-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
+- aid: optionsahoy-com:optionsahoy-com-rsulotoptimize-api
+  name: OptionsAhoy Rsu Lot Optimize API
+  description: The RsuLotOptimize API from OptionsAhoy — 1 operation(s) for rsulotoptimize.
+  humanURL: https://optionsahoy.com/for-agents/api
+  baseURL: https://optionsahoy.com/api/v1
+  tags:
+  - RsuLotOptimize
+  properties:
+  - type: OpenAPI
+    url: openapi/optionsahoy-com-rsulotoptimize-api-openapi.yml
+  - type: Documentation
+    url: https://optionsahoy.com/for-agents
+  - type: APIReference
+    url: https://optionsahoy.com/for-agents/api
+  - type: DataModel
+    url: data-model/optionsahoy-com-data-model.yml
+  - type: ErrorCatalog
+    url: errors/optionsahoy-com-problem-types.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
@@ -228,3 +366,11 @@ x-enrichment:
   status: enriched
   artifacts_added: 36
   pass: local-v3
+x-legal-name: AlphaLatitude Inc.
+x-a2a:
+  verified: true
+  probed: '2026-09-26'
+  url: "https://optionsahoy.com/.well-known/agent-card.json"
+  grade: "conformant"
+  protocol_version: "0.3.0"
+  control: 404

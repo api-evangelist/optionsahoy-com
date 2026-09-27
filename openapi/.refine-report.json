@@ -1,0 +1,28 @@
+{
+  "provider": "optionsahoy-com",
+  "sources": [
+    "optionsahoy-com-openapi.json"
+  ],
+  "outputs": [
+    "optionsahoy-com-concentration-api-openapi.yml",
+    "optionsahoy-com-discovery-api-openapi.yml",
+    "optionsahoy-com-equityfunding-api-openapi.yml",
+    "optionsahoy-com-hedging-api-openapi.yml",
+    "optionsahoy-com-iso-api-openapi.yml",
+    "optionsahoy-com-nso-api-openapi.yml",
+    "optionsahoy-com-qsbs-api-openapi.yml",
+    "optionsahoy-com-rsu-api-openapi.yml",
+    "optionsahoy-com-rsulotoptimize-api-openapi.yml"
+  ],
+  "archived": [
+    "archived openapi/optionsahoy-com-openapi.json"
+  ],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "optionsahoy-com-openapi.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "optionsahoy-com-openapi.json: declared missing tag: RsuLotOptimize",
+    "apis.yml register: written (+9 apis, 11 total)"
+  ],
+  "skipped": []
+}

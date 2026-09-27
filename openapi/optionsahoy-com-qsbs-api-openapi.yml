@@ -1,0 +1,349 @@
+openapi: 3.2.0
+info:
+  title: OptionsAhoy Calculator QSBS API
+  summary: Deterministic equity-compensation calculator endpoints. JSON in, JSON out.
+  description: Multi-year equity-compensation optimization engine.
+  version: 1.10.1
+  contact:
+    name: AlphaLatitude Inc.
+    email: andrew@alphalatitude.com
+    url: https://optionsahoy.com/for-agents
+  license:
+    name: Proprietary. Free for non-commercial use during beta.
+    url: https://optionsahoy.com/terms
+servers:
+- url: https://optionsahoy.com
+  description: Production
+tags:
+- name: QSBS
+  description: Section 1202 qualification
+paths:
+  /api/v1/qsbs:
+    post:
+      summary: Section 1202 QSBS qualification check
+      description: Evaluates Section 1202 Qualified Small Business Stock (QSBS) against the six statutory tests, returning the verdict, exclusion percentage, federal tax saved, and state conformity under OBBBA 2026 tiered exclusion rules.
+      operationId: checkQsbs
+      tags:
+      - QSBS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QsbsInput'
+            example:
+              acquisitionDate: '2020-01-15'
+              saleDate: '2026-06-01'
+              entityType: us-c-corp
+              acquisitionMethod: original-issuance
+              assetCategory: under-50m
+              industry: tech-software
+              activeBusiness: 'yes'
+              adjustedBasis: 100000
+              expectedGain: 5000000
+              stateCode: CA
+              ordinaryIncome: 250000
+              filingStatus: single
+      responses:
+        '200':
+          $ref: '#/components/responses/QsbsSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+components:
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    QsbsSuccess:
+      description: Successful qsbs_check result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/QsbsResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              verdict: qualifies
+              exclusionPercent: 1
+              perIssuerCap: 10000000
+              tenXBasisCap: 1000000
+              applicableCap: 10000000
+              excludableGain: 5000000
+              taxableGain: 0
+              federalTaxSaved: 1190000
+              stateConforms: none
+              stateNote: California does not conform to §1202 — your full gain is taxable at the state level.
+              holdingYears: 6.375342465753425
+              yearsUntilFullExclusion: 0
+              era: pre-obbba
+              tests:
+              - id: entity
+                label: US C-corporation
+                status: pass
+                detail: C-corps qualify. S-corps, LLCs, partnerships, and foreign entities do not.
+              - id: original-issuance
+                label: Original-issuance acquisition
+                status: pass
+                detail: Stock acquired directly from the company qualifies.
+              - id: asset-cap
+                label: Gross assets ≤ $50M at issuance
+                status: pass
+                detail: Issuer was under the $50M aggregate gross-assets ceiling.
+              - id: industry
+                label: Qualified trade or business
+                status: pass
+                detail: Software, manufacturing, biotech R&D, retail, and similar trades qualify.
+              - id: active-business
+                label: 80% of assets in active business
+                status: pass
+                detail: At least 80% of corporate assets used in the qualified active trade.
+              - id: holding
+                label: Held at least 5 years
+                status: pass
+                detail: 6.4 years held — 100% exclusion tier.
+  schemas:
+    QsbsInput:
+      type: object
+      required:
+      - acquisitionDate
+      - saleDate
+      - entityType
+      - acquisitionMethod
+      - assetCategory
+      - industry
+      - activeBusiness
+      - adjustedBasis
+      - expectedGain
+      - stateCode
+      - ordinaryIncome
+      - filingStatus
+      properties:
+        acquisitionDate:
+          $ref: '#/components/schemas/IsoDate'
+        saleDate:
+          $ref: '#/components/schemas/IsoDate'
+        entityType:
+          type: string
+          enum:
+          - us-c-corp
+          - other
+        acquisitionMethod:
+          type: string
+          enum:
+          - original-issuance
+          - gift-or-inheritance
+          - secondary
+          - unsure
+        assetCategory:
+          type: string
+          enum:
+          - under-50m
+          - 50m-to-75m
+          - over-75m
+          - unsure
+        industry:
+          type: string
+          enum:
+          - tech-software
+          - manufacturing
+          - biotech-research
+          - retail-wholesale
+          - health-services
+          - law
+          - engineering
+          - architecture
+          - accounting-actuarial
+          - consulting
+          - finance
+          - farming
+          - extraction
+          - hospitality
+          - performing-arts
+          - other-services
+          - unsure
+        activeBusiness:
+          type: string
+          enum:
+          - 'yes'
+          - 'no'
+          - unsure
+        adjustedBasis:
+          type: number
+          minimum: 0
+        expectedGain:
+          type: number
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    QsbsResult:
+      type: object
+      description: Section 1202 QSBS qualification result. All dollar amounts are USD.
+      properties:
+        verdict:
+          type: string
+          enum:
+          - qualifies
+          - partial
+          - too-soon
+          - caveats
+          - disqualified
+          description: Overall verdict. "partial" = qualifies but at a sub-100% exclusion tier (e.g. an OBBBA 3- or 4-year hold gives 50% or 75%). "caveats" = qualifies, but one or more tests returned "unsure" (pass conditional on facts the caller marked unknown). "too-soon" = the holding period has not reached any exclusion tier yet.
+        exclusionPercent:
+          type: number
+          enum:
+          - 0
+          - 0.5
+          - 0.75
+          - 1
+          description: Fraction of the capped gain excludable from federal tax, per the era and holding-period tier.
+        perIssuerCap:
+          type: number
+          description: 'Statutory per-issuer cap in dollars: $10M pre-OBBBA, $15M for stock acquired after July 4, 2025.'
+        tenXBasisCap:
+          type: number
+          description: 10 x adjustedBasis cap in dollars.
+        applicableCap:
+          type: number
+          description: 'max(perIssuerCap, tenXBasisCap): the exclusion cap actually applied, in dollars.'
+        excludableGain:
+          type: number
+          description: Portion of expectedGain excludable from federal tax in dollars.
+        taxableGain:
+          type: number
+          description: Portion of expectedGain still federally taxable in dollars (overage above the cap plus any non-excluded fraction).
+        federalTaxSaved:
+          type: number
+          description: Federal LTCG tax (including NIIT) avoided on the excluded gain, in dollars.
+        stateConforms:
+          type: string
+          enum:
+          - full
+          - partial
+          - none
+          description: Whether the user state conforms to the federal 1202 exclusion.
+        stateNote:
+          type: string
+          description: Per-state conformity explanation. May be omitted.
+        cappedOverageNote:
+          type: string
+          description: 'Present only when expectedGain exceeds applicableCap and an exclusion is in play: explains that the overage is fully taxable regardless of holding period and that spreading shares across separate taxpayers (e.g. non-grantor trusts) can multiply the per-issuer exclusion. Omitted otherwise.'
+        holdingYears:
+          type: number
+          description: Calendar-aware years between acquisitionDate and saleDate.
+        yearsUntilFullExclusion:
+          type: number
+          description: Additional years to hold before reaching the 100% exclusion tier; 0 when already reached.
+        era:
+          type: string
+          enum:
+          - pre-2009
+          - pre-2010
+          - pre-obbba
+          - obbba
+          description: Acquisition-era classification that sets the exclusion schedule (50% pre-2009 era, 75% pre-2010 era, 100% at 5y pre-OBBBA, tiered 50/75/100% at 3/4/5y under OBBBA).
+        tests:
+          type: array
+          description: The six statutory tests with per-test status, identifying any gate that failed.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Stable test identifier.
+              label:
+                type: string
+                description: Human-readable test name.
+              status:
+                type: string
+                enum:
+                - pass
+                - fail
+                - unsure
+                - wait
+                description: '"wait" means the test will pass with more holding time.'
+              detail:
+                type: string
+                description: One-line explanation of the test outcome.
+            required:
+            - id
+            - label
+            - status
+            - detail
+      required:
+      - verdict
+      - exclusionPercent
+      - perIssuerCap
+      - tenXBasisCap
+      - applicableCap
+      - excludableGain
+      - taxableGain
+      - federalTaxSaved
+      - stateConforms
+      - holdingYears
+      - yearsUntilFullExclusion
+      - era
+      - tests
+externalDocs:
+  description: Integration surface, citation guidance, and roadmap
+  url: https://optionsahoy.com/for-agents
