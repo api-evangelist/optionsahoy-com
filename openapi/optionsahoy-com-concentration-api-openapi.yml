@@ -51,20 +51,388 @@ paths:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
 components:
+  schemas:
+    Ticker:
+      type: string
+      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
+    ConcentrationInput:
+      type: object
+      required:
+      - positionValue
+      - costBasis
+      - acquisitionDate
+      - sector
+      - stateCode
+      - filingStatus
+      - ordinaryIncome
+      - totalAssets
+      properties:
+        positionValue:
+          type: number
+          minimum: 0
+          description: Current value of the concentrated position, USD.
+        costBasis:
+          type: number
+          minimum: 0
+        acquisitionDate:
+          $ref: '#/components/schemas/IsoDate'
+        sector:
+          $ref: '#/components/schemas/SectorKey'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        totalAssets:
+          type: number
+          minimum: 0
+          description: Total investable portfolio in dollars (concentrated position + everything else). User-supplied; never inferred.
+        expectedPositionReturn:
+          type:
+          - number
+          - string
+          description: Annual return on the concentrated stock. Required unless `ticker` resolves it from trailing CAGR. Also accepts the string "market" to use the S&P 500 trailing average when the user has no view.
+        expectedMarketReturn:
+          type:
+          - number
+          - string
+          description: Annual return on diversified holdings + reinvested proceeds. Defaults to SPY trailing CAGR for the 3-year horizon if omitted. The string "market" names that same default explicitly.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
+        volatilityDrag:
+          type: number
+          minimum: 0
+          maximum: 0.99
+          description: Multiplicative haircut on the 3y stock-price path. Either this OR `volatility` is required for drag; if both are supplied, `volatilityDrag` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma). Used for the closed-form option pricing hedging path AND, when `volatilityDrag` is omitted, derives drag = 1 - exp(-(sigma^2 / 2) * 3). Either this OR `volatilityDrag` is required for drag.
+          maximum: 5
+        hedgeChoice:
+          type: object
+          required:
+          - kind
+          - protectionLevel
+          - tenorYears
+          properties:
+            kind:
+              type: string
+              enum:
+              - put
+              - collar
+            protectionLevel:
+              type: number
+              minimum: 0.05
+              maximum: 0.5
+            tenorYears:
+              type: number
+              minimum: 0.25
+            upsideCapPct:
+              type: number
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
+    SectorKey:
+      type: string
+      enum:
+      - tech_software
+      - semiconductors
+      - consumer_cyclical
+      - consumer_defensive
+      - financials
+      - healthcare_biotech
+      - energy
+      - industrials
+      - communication
+      - broad_market
+    ConcentrationResult:
+      type: object
+      description: Single-stock concentration analysis. All dollar amounts are USD.
+      properties:
+        concentration:
+          type: number
+          description: Position value / total assets, 0..1.
+        riskBand:
+          type: string
+          enum:
+          - Low
+          - Moderate
+          - Concentrated
+          - Highly concentrated
+          - Extreme
+          description: Qualitative concentration band for the position weight.
+        isLongTermToday:
+          type: boolean
+          description: True when the position already qualifies for long-term capital gains treatment.
+        longTermDate:
+          type: string
+          description: Date the position turns long-term (acquisitionDate + 1 year). ISO 8601 date-time string.
+        daysUntilLongTerm:
+          type: number
+          description: Days until long-term treatment; 0 when already long-term.
+        lossExposure:
+          type: array
+          description: Dollar damage at 30/50/70% single-stock drawdowns.
+          items:
+            type: object
+            properties:
+              drop:
+                type: number
+                description: Modeled drawdown as a fraction of position value (0.30, 0.50, 0.70).
+              dollarLoss:
+                type: number
+                description: Dollars lost at this drawdown.
+              newConcentration:
+                type: number
+                description: Portfolio concentration (0..1) after the drawdown.
+            required:
+            - drop
+            - dollarLoss
+            - newConcentration
+        waitForLtInsight:
+          type:
+          - object
+          - 'null'
+          description: Tax saved by waiting for long-term treatment before selling; null when already long-term or no sale is needed.
+          properties:
+            longTermDate:
+              type: string
+              description: Date the position turns long-term. ISO 8601 date-time string.
+            daysAway:
+              type: number
+              description: Days until that date.
+            immediateLumpSumTax:
+              type: number
+              description: Tax in dollars on the full sell-down executed today (short-term rates).
+            delayedLumpSumTax:
+              type: number
+              description: Tax in dollars on the same sale executed after the long-term date.
+            savings:
+              type: number
+              description: immediateLumpSumTax - delayedLumpSumTax in dollars (floored at 0).
+          required:
+          - longTermDate
+          - daysAway
+          - immediateLumpSumTax
+          - delayedLumpSumTax
+          - savings
+        schedule:
+          type: array
+          description: Sell-down plans over 1, 2, and 3 years; empty when the position is already at or below the target weight.
+          items:
+            type: object
+            properties:
+              planKey:
+                type: string
+                enum:
+                - lump_sum
+                - two_year
+                - three_year
+                description: Plan identifier.
+              planLabel:
+                type: string
+                description: Human-readable plan name, e.g. "Sell over 2 years".
+              yearlySales:
+                type: array
+                description: 'One entry per sale year: year (1-indexed), saleAmount, gainAmount, isLongTerm, federalTax, stateTax, totalTax in dollars, plus a per-slice breakdown.'
+                items:
+                  type: object
+                  properties:
+                    year:
+                      type: number
+                      description: Sale year, 1-indexed.
+                    saleAmount:
+                      type: number
+                      description: Dollars sold this year.
+                    gainAmount:
+                      type: number
+                      description: Taxable gain in dollars within the sale.
+                    isLongTerm:
+                      type: boolean
+                      description: True when this sale gets long-term capital gains treatment.
+                    federalTax:
+                      type: number
+                      description: Federal tax in dollars on this sale (including NIIT).
+                    stateTax:
+                      type: number
+                      description: State tax in dollars on this sale.
+                    totalTax:
+                      type: number
+                      description: Total tax in dollars on this sale.
+                    breakdown:
+                      type: array
+                      items:
+                        type: object
+                        description: 'One tax slice: a dollar amount taxed at one rate.'
+                        properties:
+                          label:
+                            type: string
+                            description: Tax line label, e.g. "Federal LTCG", "NIIT", "California".
+                          rate:
+                            type: number
+                            description: Rate applied to this slice as a decimal (0.15 = 15%).
+                          amount:
+                            type: number
+                            description: Dollars of gain in this slice.
+                          tax:
+                            type: number
+                            description: 'Tax in dollars: amount x rate.'
+                        required:
+                        - label
+                        - rate
+                        - amount
+                        - tax
+                      description: Per-rate tax slices for this sale.
+                  required:
+                  - year
+                  - saleAmount
+                  - gainAmount
+                  - isLongTerm
+                  - federalTax
+                  - stateTax
+                  - totalTax
+                  - breakdown
+              totalSale:
+                type: number
+                description: Total nominal sale dollars across the plan years.
+              totalTax:
+                type: number
+                description: Total tax in dollars across the plan years.
+              endOfHorizonWealth:
+                type: number
+                description: Total after-tax wealth in dollars at the end of the 3-year comparison horizon.
+              savingsVsLumpSum:
+                type: number
+                description: Raw tax saved in dollars vs selling everything today; positive means this plan pays less tax.
+              wealthVsLumpSum:
+                type: number
+                description: End-of-horizon wealth delta in dollars vs the sell-everything-today baseline; positive means this plan ends wealthier.
+              year1IsShortTerm:
+                type: boolean
+                description: True when the first sale year would be taxed at short-term rates.
+              taxBreakdown:
+                type: array
+                items:
+                  type: object
+                  description: 'One tax slice: a dollar amount taxed at one rate.'
+                  properties:
+                    label:
+                      type: string
+                      description: Tax line label, e.g. "Federal LTCG", "NIIT", "California".
+                    rate:
+                      type: number
+                      description: Rate applied to this slice as a decimal (0.15 = 15%).
+                    amount:
+                      type: number
+                      description: Dollars of gain in this slice.
+                    tax:
+                      type: number
+                      description: 'Tax in dollars: amount x rate.'
+                  required:
+                  - label
+                  - rate
+                  - amount
+                  - tax
+                description: Plan-total tax slices, same-rate rows merged.
+              wealthByYear:
+                type: array
+                items:
+                  type: number
+                description: Total wealth in dollars at the end of each year, t = 0..3 (4 points). For charting.
+            required:
+            - planKey
+            - planLabel
+            - yearlySales
+            - totalSale
+            - totalTax
+            - endOfHorizonWealth
+            - savingsVsLumpSum
+            - wealthVsLumpSum
+            - year1IsShortTerm
+            - taxBreakdown
+            - wealthByYear
+        hedging:
+          type: object
+          description: Modeled cost of a protective hedge covering the full position. Defaults to a 1-year 30%-OTM put; if a `hedgeChoice` is supplied, this block prices that structure (kind / protectionLevel / tenorYears, plus a short call for a collar).
+          properties:
+            kind:
+              type: string
+              enum:
+              - put
+              - collar
+              description: 'Structure priced: "put" (default) or "collar" when a hedgeChoice with kind:"collar" and upsideCapPct was supplied.'
+            protectionLevel:
+              type: number
+              description: Floor as a fraction below spot (0.30 = a 30%-OTM put). Echoes hedgeChoice.protectionLevel, else 0.30.
+            tenorYears:
+              type: number
+              description: Hedge tenor in years. Echoes hedgeChoice.tenorYears, else 1.
+            strike:
+              type: number
+              description: Long put strike in dollars ((1 - protectionLevel) x position value).
+            putPrice:
+              type: number
+              description: Gross long-put premium in dollars for the tenor.
+            callStrike:
+              type: number
+              description: Collar short-call strike in dollars ((1 + upsideCapPct) x position value). Omitted for a put.
+            callPrice:
+              type: number
+              description: Collar short-call premium in dollars received. Omitted for a put.
+            netPremium:
+              type: number
+              description: 'Net premium paid in dollars: putPrice for a put, max(0, putPrice - callPrice) for a collar.'
+            sigma:
+              type: number
+              description: Annualized volatility used in pricing (explicit or ticker-implied vol, else a sector-typical implied volatility).
+            riskFreeRate:
+              type: number
+              description: Annualized risk-free rate used in pricing, as a decimal.
+          required:
+          - kind
+          - protectionLevel
+          - tenorYears
+          - strike
+          - putPrice
+          - netPremium
+          - sigma
+          - riskFreeRate
+        sectorContextLine:
+          type: string
+          description: One-line volatility/drawdown context for the chosen sector.
+        advisorBenchmarkLine:
+          type: string
+          description: One-line comparison of the user weight vs the common advisor 10% single-name guideline.
+      required:
+      - concentration
+      - riskBand
+      - isLongTermToday
+      - longTermDate
+      - daysUntilLongTerm
+      - lossExposure
+      - waitForLtInsight
+      - schedule
+      - hedging
+      - sectorContextLine
+      - advisorBenchmarkLine
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
   responses:
     MethodNotAllowed:
       description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
       content:
         application/json:
           schema:
@@ -349,385 +717,17 @@ components:
                 riskFreeRate: 0.045
               sectorContextLine: Tech / Software single names hit a 50%+ peak-to-trough drawdown in roughly 1 of every 5 rolling 3-year windows over 2014–2024. Even mega-caps aren’t exempt.
               advisorBenchmarkLine: Most fee-only advisors target ≤10% in any single name. You're at 33%.
-  schemas:
-    ConcentrationResult:
-      type: object
-      description: Single-stock concentration analysis. All dollar amounts are USD.
-      properties:
-        concentration:
-          type: number
-          description: Position value / total assets, 0..1.
-        riskBand:
-          type: string
-          enum:
-          - Low
-          - Moderate
-          - Concentrated
-          - Highly concentrated
-          - Extreme
-          description: Qualitative concentration band for the position weight.
-        isLongTermToday:
-          type: boolean
-          description: True when the position already qualifies for long-term capital gains treatment.
-        longTermDate:
-          type: string
-          description: Date the position turns long-term (acquisitionDate + 1 year). ISO 8601 date-time string.
-        daysUntilLongTerm:
-          type: number
-          description: Days until long-term treatment; 0 when already long-term.
-        lossExposure:
-          type: array
-          description: Dollar damage at 30/50/70% single-stock drawdowns.
-          items:
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
             type: object
-            properties:
-              drop:
-                type: number
-                description: Modeled drawdown as a fraction of position value (0.30, 0.50, 0.70).
-              dollarLoss:
-                type: number
-                description: Dollars lost at this drawdown.
-              newConcentration:
-                type: number
-                description: Portfolio concentration (0..1) after the drawdown.
             required:
-            - drop
-            - dollarLoss
-            - newConcentration
-        waitForLtInsight:
-          type:
-          - object
-          - 'null'
-          description: Tax saved by waiting for long-term treatment before selling; null when already long-term or no sale is needed.
-          properties:
-            longTermDate:
-              type: string
-              description: Date the position turns long-term. ISO 8601 date-time string.
-            daysAway:
-              type: number
-              description: Days until that date.
-            immediateLumpSumTax:
-              type: number
-              description: Tax in dollars on the full sell-down executed today (short-term rates).
-            delayedLumpSumTax:
-              type: number
-              description: Tax in dollars on the same sale executed after the long-term date.
-            savings:
-              type: number
-              description: immediateLumpSumTax - delayedLumpSumTax in dollars (floored at 0).
-          required:
-          - longTermDate
-          - daysAway
-          - immediateLumpSumTax
-          - delayedLumpSumTax
-          - savings
-        schedule:
-          type: array
-          description: Sell-down plans over 1, 2, and 3 years; empty when the position is already at or below the target weight.
-          items:
-            type: object
+            - error
             properties:
-              planKey:
+              error:
                 type: string
-                enum:
-                - lump_sum
-                - two_year
-                - three_year
-                description: Plan identifier.
-              planLabel:
-                type: string
-                description: Human-readable plan name, e.g. "Sell over 2 years".
-              yearlySales:
-                type: array
-                description: 'One entry per sale year: year (1-indexed), saleAmount, gainAmount, isLongTerm, federalTax, stateTax, totalTax in dollars, plus a per-slice breakdown.'
-                items:
-                  type: object
-                  properties:
-                    year:
-                      type: number
-                      description: Sale year, 1-indexed.
-                    saleAmount:
-                      type: number
-                      description: Dollars sold this year.
-                    gainAmount:
-                      type: number
-                      description: Taxable gain in dollars within the sale.
-                    isLongTerm:
-                      type: boolean
-                      description: True when this sale gets long-term capital gains treatment.
-                    federalTax:
-                      type: number
-                      description: Federal tax in dollars on this sale (including NIIT).
-                    stateTax:
-                      type: number
-                      description: State tax in dollars on this sale.
-                    totalTax:
-                      type: number
-                      description: Total tax in dollars on this sale.
-                    breakdown:
-                      type: array
-                      items:
-                        type: object
-                        description: 'One tax slice: a dollar amount taxed at one rate.'
-                        properties:
-                          label:
-                            type: string
-                            description: Tax line label, e.g. "Federal LTCG", "NIIT", "California".
-                          rate:
-                            type: number
-                            description: Rate applied to this slice as a decimal (0.15 = 15%).
-                          amount:
-                            type: number
-                            description: Dollars of gain in this slice.
-                          tax:
-                            type: number
-                            description: 'Tax in dollars: amount x rate.'
-                        required:
-                        - label
-                        - rate
-                        - amount
-                        - tax
-                      description: Per-rate tax slices for this sale.
-                  required:
-                  - year
-                  - saleAmount
-                  - gainAmount
-                  - isLongTerm
-                  - federalTax
-                  - stateTax
-                  - totalTax
-                  - breakdown
-              totalSale:
-                type: number
-                description: Total nominal sale dollars across the plan years.
-              totalTax:
-                type: number
-                description: Total tax in dollars across the plan years.
-              endOfHorizonWealth:
-                type: number
-                description: Total after-tax wealth in dollars at the end of the 3-year comparison horizon.
-              savingsVsLumpSum:
-                type: number
-                description: Raw tax saved in dollars vs selling everything today; positive means this plan pays less tax.
-              wealthVsLumpSum:
-                type: number
-                description: End-of-horizon wealth delta in dollars vs the sell-everything-today baseline; positive means this plan ends wealthier.
-              year1IsShortTerm:
-                type: boolean
-                description: True when the first sale year would be taxed at short-term rates.
-              taxBreakdown:
-                type: array
-                items:
-                  type: object
-                  description: 'One tax slice: a dollar amount taxed at one rate.'
-                  properties:
-                    label:
-                      type: string
-                      description: Tax line label, e.g. "Federal LTCG", "NIIT", "California".
-                    rate:
-                      type: number
-                      description: Rate applied to this slice as a decimal (0.15 = 15%).
-                    amount:
-                      type: number
-                      description: Dollars of gain in this slice.
-                    tax:
-                      type: number
-                      description: 'Tax in dollars: amount x rate.'
-                  required:
-                  - label
-                  - rate
-                  - amount
-                  - tax
-                description: Plan-total tax slices, same-rate rows merged.
-              wealthByYear:
-                type: array
-                items:
-                  type: number
-                description: Total wealth in dollars at the end of each year, t = 0..3 (4 points). For charting.
-            required:
-            - planKey
-            - planLabel
-            - yearlySales
-            - totalSale
-            - totalTax
-            - endOfHorizonWealth
-            - savingsVsLumpSum
-            - wealthVsLumpSum
-            - year1IsShortTerm
-            - taxBreakdown
-            - wealthByYear
-        hedging:
-          type: object
-          description: Modeled cost of a protective hedge covering the full position. Defaults to a 1-year 30%-OTM put; if a `hedgeChoice` is supplied, this block prices that structure (kind / protectionLevel / tenorYears, plus a short call for a collar).
-          properties:
-            kind:
-              type: string
-              enum:
-              - put
-              - collar
-              description: 'Structure priced: "put" (default) or "collar" when a hedgeChoice with kind:"collar" and upsideCapPct was supplied.'
-            protectionLevel:
-              type: number
-              description: Floor as a fraction below spot (0.30 = a 30%-OTM put). Echoes hedgeChoice.protectionLevel, else 0.30.
-            tenorYears:
-              type: number
-              description: Hedge tenor in years. Echoes hedgeChoice.tenorYears, else 1.
-            strike:
-              type: number
-              description: Long put strike in dollars ((1 - protectionLevel) x position value).
-            putPrice:
-              type: number
-              description: Gross long-put premium in dollars for the tenor.
-            callStrike:
-              type: number
-              description: Collar short-call strike in dollars ((1 + upsideCapPct) x position value). Omitted for a put.
-            callPrice:
-              type: number
-              description: Collar short-call premium in dollars received. Omitted for a put.
-            netPremium:
-              type: number
-              description: 'Net premium paid in dollars: putPrice for a put, max(0, putPrice - callPrice) for a collar.'
-            sigma:
-              type: number
-              description: Annualized volatility used in pricing (explicit or ticker-implied vol, else a sector-typical implied volatility).
-            riskFreeRate:
-              type: number
-              description: Annualized risk-free rate used in pricing, as a decimal.
-          required:
-          - kind
-          - protectionLevel
-          - tenorYears
-          - strike
-          - putPrice
-          - netPremium
-          - sigma
-          - riskFreeRate
-        sectorContextLine:
-          type: string
-          description: One-line volatility/drawdown context for the chosen sector.
-        advisorBenchmarkLine:
-          type: string
-          description: One-line comparison of the user weight vs the common advisor 10% single-name guideline.
-      required:
-      - concentration
-      - riskBand
-      - isLongTermToday
-      - longTermDate
-      - daysUntilLongTerm
-      - lossExposure
-      - waitForLtInsight
-      - schedule
-      - hedging
-      - sectorContextLine
-      - advisorBenchmarkLine
-    Ticker:
-      type: string
-      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
-    IsoDate:
-      type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
-    FilingStatus:
-      type: string
-      enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
-    StateCode:
-      type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
-    ConcentrationInput:
-      type: object
-      required:
-      - positionValue
-      - costBasis
-      - acquisitionDate
-      - sector
-      - stateCode
-      - filingStatus
-      - ordinaryIncome
-      - totalAssets
-      properties:
-        positionValue:
-          type: number
-          minimum: 0
-          description: Current value of the concentrated position, USD.
-        costBasis:
-          type: number
-          minimum: 0
-        acquisitionDate:
-          $ref: '#/components/schemas/IsoDate'
-        sector:
-          $ref: '#/components/schemas/SectorKey'
-        stateCode:
-          $ref: '#/components/schemas/StateCode'
-        filingStatus:
-          $ref: '#/components/schemas/FilingStatus'
-        ordinaryIncome:
-          type: number
-          minimum: 0
-        totalAssets:
-          type: number
-          minimum: 0
-          description: Total investable portfolio in dollars (concentrated position + everything else). User-supplied; never inferred.
-        expectedPositionReturn:
-          type:
-          - number
-          - string
-          description: Annual return on the concentrated stock. Required unless `ticker` resolves it from trailing CAGR. Also accepts the string "market" to use the S&P 500 trailing average when the user has no view.
-        expectedMarketReturn:
-          type:
-          - number
-          - string
-          description: Annual return on diversified holdings + reinvested proceeds. Defaults to SPY trailing CAGR for the 3-year horizon if omitted. The string "market" names that same default explicitly.
-        ticker:
-          $ref: '#/components/schemas/Ticker'
-        volatilityDrag:
-          type: number
-          minimum: 0
-          maximum: 0.99
-          description: Multiplicative haircut on the 3y stock-price path. Either this OR `volatility` is required for drag; if both are supplied, `volatilityDrag` wins.
-        volatility:
-          type: number
-          minimum: 0
-          description: Annualized volatility (sigma). Used for the closed-form option pricing hedging path AND, when `volatilityDrag` is omitted, derives drag = 1 - exp(-(sigma^2 / 2) * 3). Either this OR `volatilityDrag` is required for drag.
-          maximum: 5
-        hedgeChoice:
-          type: object
-          required:
-          - kind
-          - protectionLevel
-          - tenorYears
-          properties:
-            kind:
-              type: string
-              enum:
-              - put
-              - collar
-            protectionLevel:
-              type: number
-              minimum: 0.05
-              maximum: 0.5
-            tenorYears:
-              type: number
-              minimum: 0.25
-            upsideCapPct:
-              type: number
-    SectorKey:
-      type: string
-      enum:
-      - tech_software
-      - semiconductors
-      - consumer_cyclical
-      - consumer_defensive
-      - financials
-      - healthcare_biotech
-      - energy
-      - industrials
-      - communication
-      - broad_market
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

@@ -52,190 +52,7 @@ paths:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
 components:
-  responses:
-    MethodNotAllowed:
-      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    QsbsSuccess:
-      description: Successful qsbs_check result.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - ok
-            - result
-            properties:
-              ok:
-                type: boolean
-                const: true
-              result:
-                $ref: '#/components/schemas/QsbsResult'
-              next_steps:
-                type: object
-                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
-                properties:
-                  web_tool:
-                    type: string
-                  also_run:
-                    type: array
-                    items:
-                      type: string
-                  beta:
-                    type: string
-          example:
-            ok: true
-            result:
-              verdict: qualifies
-              exclusionPercent: 1
-              perIssuerCap: 10000000
-              tenXBasisCap: 1000000
-              applicableCap: 10000000
-              excludableGain: 5000000
-              taxableGain: 0
-              federalTaxSaved: 1190000
-              stateConforms: none
-              stateNote: California does not conform to §1202 — your full gain is taxable at the state level.
-              holdingYears: 6.375342465753425
-              yearsUntilFullExclusion: 0
-              era: pre-obbba
-              tests:
-              - id: entity
-                label: US C-corporation
-                status: pass
-                detail: C-corps qualify. S-corps, LLCs, partnerships, and foreign entities do not.
-              - id: original-issuance
-                label: Original-issuance acquisition
-                status: pass
-                detail: Stock acquired directly from the company qualifies.
-              - id: asset-cap
-                label: Gross assets ≤ $50M at issuance
-                status: pass
-                detail: Issuer was under the $50M aggregate gross-assets ceiling.
-              - id: industry
-                label: Qualified trade or business
-                status: pass
-                detail: Software, manufacturing, biotech R&D, retail, and similar trades qualify.
-              - id: active-business
-                label: 80% of assets in active business
-                status: pass
-                detail: At least 80% of corporate assets used in the qualified active trade.
-              - id: holding
-                label: Held at least 5 years
-                status: pass
-                detail: 6.4 years held — 100% exclusion tier.
   schemas:
-    QsbsInput:
-      type: object
-      required:
-      - acquisitionDate
-      - saleDate
-      - entityType
-      - acquisitionMethod
-      - assetCategory
-      - industry
-      - activeBusiness
-      - adjustedBasis
-      - expectedGain
-      - stateCode
-      - ordinaryIncome
-      - filingStatus
-      properties:
-        acquisitionDate:
-          $ref: '#/components/schemas/IsoDate'
-        saleDate:
-          $ref: '#/components/schemas/IsoDate'
-        entityType:
-          type: string
-          enum:
-          - us-c-corp
-          - other
-        acquisitionMethod:
-          type: string
-          enum:
-          - original-issuance
-          - gift-or-inheritance
-          - secondary
-          - unsure
-        assetCategory:
-          type: string
-          enum:
-          - under-50m
-          - 50m-to-75m
-          - over-75m
-          - unsure
-        industry:
-          type: string
-          enum:
-          - tech-software
-          - manufacturing
-          - biotech-research
-          - retail-wholesale
-          - health-services
-          - law
-          - engineering
-          - architecture
-          - accounting-actuarial
-          - consulting
-          - finance
-          - farming
-          - extraction
-          - hospitality
-          - performing-arts
-          - other-services
-          - unsure
-        activeBusiness:
-          type: string
-          enum:
-          - 'yes'
-          - 'no'
-          - unsure
-        adjustedBasis:
-          type: number
-          minimum: 0
-        expectedGain:
-          type: number
-        stateCode:
-          $ref: '#/components/schemas/StateCode'
-        ordinaryIncome:
-          type: number
-          minimum: 0
-        filingStatus:
-          $ref: '#/components/schemas/FilingStatus'
-    IsoDate:
-      type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
-    FilingStatus:
-      type: string
-      enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
-    StateCode:
-      type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
     QsbsResult:
       type: object
       description: Section 1202 QSBS qualification result. All dollar amounts are USD.
@@ -344,6 +161,189 @@ components:
       - yearsUntilFullExclusion
       - era
       - tests
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
+    QsbsInput:
+      type: object
+      required:
+      - acquisitionDate
+      - saleDate
+      - entityType
+      - acquisitionMethod
+      - assetCategory
+      - industry
+      - activeBusiness
+      - adjustedBasis
+      - expectedGain
+      - stateCode
+      - ordinaryIncome
+      - filingStatus
+      properties:
+        acquisitionDate:
+          $ref: '#/components/schemas/IsoDate'
+        saleDate:
+          $ref: '#/components/schemas/IsoDate'
+        entityType:
+          type: string
+          enum:
+          - us-c-corp
+          - other
+        acquisitionMethod:
+          type: string
+          enum:
+          - original-issuance
+          - gift-or-inheritance
+          - secondary
+          - unsure
+        assetCategory:
+          type: string
+          enum:
+          - under-50m
+          - 50m-to-75m
+          - over-75m
+          - unsure
+        industry:
+          type: string
+          enum:
+          - tech-software
+          - manufacturing
+          - biotech-research
+          - retail-wholesale
+          - health-services
+          - law
+          - engineering
+          - architecture
+          - accounting-actuarial
+          - consulting
+          - finance
+          - farming
+          - extraction
+          - hospitality
+          - performing-arts
+          - other-services
+          - unsure
+        activeBusiness:
+          type: string
+          enum:
+          - 'yes'
+          - 'no'
+          - unsure
+        adjustedBasis:
+          type: number
+          minimum: 0
+        expectedGain:
+          type: number
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    QsbsSuccess:
+      description: Successful qsbs_check result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/QsbsResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              verdict: qualifies
+              exclusionPercent: 1
+              perIssuerCap: 10000000
+              tenXBasisCap: 1000000
+              applicableCap: 10000000
+              excludableGain: 5000000
+              taxableGain: 0
+              federalTaxSaved: 1190000
+              stateConforms: none
+              stateNote: California does not conform to §1202 — your full gain is taxable at the state level.
+              holdingYears: 6.375342465753425
+              yearsUntilFullExclusion: 0
+              era: pre-obbba
+              tests:
+              - id: entity
+                label: US C-corporation
+                status: pass
+                detail: C-corps qualify. S-corps, LLCs, partnerships, and foreign entities do not.
+              - id: original-issuance
+                label: Original-issuance acquisition
+                status: pass
+                detail: Stock acquired directly from the company qualifies.
+              - id: asset-cap
+                label: Gross assets ≤ $50M at issuance
+                status: pass
+                detail: Issuer was under the $50M aggregate gross-assets ceiling.
+              - id: industry
+                label: Qualified trade or business
+                status: pass
+                detail: Software, manufacturing, biotech R&D, retail, and similar trades qualify.
+              - id: active-business
+                label: 80% of assets in active business
+                status: pass
+                detail: At least 80% of corporate assets used in the qualified active trade.
+              - id: holding
+                label: Held at least 5 years
+                status: pass
+                detail: 6.4 years held — 100% exclusion tier.
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

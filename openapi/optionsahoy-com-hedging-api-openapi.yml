@@ -258,6 +258,19 @@ components:
         ticker:
           type: string
           description: Optional public-stock symbol to derive implied volatility (e.g. "AAPL").
+    SectorKey:
+      type: string
+      enum:
+      - tech_software
+      - semiconductors
+      - consumer_cyclical
+      - consumer_defensive
+      - financials
+      - healthcare_biotech
+      - energy
+      - industrials
+      - communication
+      - broad_market
     ProtectivePutResult:
       type: object
       description: Protective put, zero-cost collar, and put-spread pricing on a single-stock position. All dollar amounts are USD.
@@ -555,19 +568,6 @@ components:
       - payoffTable
       - payoffRange
       - recommended
-    SectorKey:
-      type: string
-      enum:
-      - tech_software
-      - semiconductors
-      - consumer_cyclical
-      - consumer_defensive
-      - financials
-      - healthcare_biotech
-      - energy
-      - industrials
-      - communication
-      - broad_market
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

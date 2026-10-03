@@ -50,93 +50,68 @@ paths:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
 components:
-  responses:
-    MethodNotAllowed:
-      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    RsuSuccess:
-      description: Successful rsu_sell_vs_hold result.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - ok
-            - result
-            properties:
-              ok:
-                type: boolean
-                const: true
-              result:
-                $ref: '#/components/schemas/RsuResult'
-              next_steps:
-                type: object
-                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
-                properties:
-                  web_tool:
-                    type: string
-                  also_run:
-                    type: array
-                    items:
-                      type: string
-                  beta:
-                    type: string
-          example:
-            ok: true
-            result:
-              vest:
-                vestValue: 100000
-                federal: 33171.25
-                state: 9300.000000000004
-                socialSecurity: 0
-                medicare: 1450
-                additionalMedicare: 899.9999999999999
-                total: 44821.25
-                netCashAtVest: 55178.75
-                federalWithheldAtVest: 22000
-              bracketJump:
-                fromRate: 0.24
-                toRate: 0.35
-                thresholdAtJump: 201775
-              hold:
-                costBasis: 100
-                effectiveSalePrice: 118.81105408525967
-                sharesRetained: 551.7875
-                expectedGain: 10379.70450607022
-                capGainFederal: 1951.384447141201
-                capGainState: 965.3125190645296
-                capGainTotal: 2916.696966205731
-                isLongTerm: true
-                netAtYearN: 62641.75753986449
-              sellNowInvest:
-                netCashAtY0: 55178.75
-                marketGain: 7995.400875000001
-                capGainFederal: 1503.1353644999997
-                capGainState: 743.5722813749999
-                capGainTotal: 2246.707645875
-                isLongTerm: true
-                netAtYearN: 60927.443229125
-              holdMinusSell: 1714.3143107394935
   schemas:
+    Ticker:
+      type: string
+      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    RsuInput:
+      type: object
+      required:
+      - shares
+      - currentPrice
+      - ordinaryIncome
+      - filingStatus
+      - stateCode
+      - stillEmployed
+      - holdYears
+      properties:
+        shares:
+          type: integer
+          minimum: 1
+        currentPrice:
+          type: number
+          minimum: 0
+          description: Fair market value at vest.
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        stillEmployed:
+          type: boolean
+        holdYears:
+          type: number
+          minimum: 0.25
+          maximum: 5
+        expectedSalePrice:
+          type:
+          - number
+          - string
+          minimum: 0
+          description: Projected $/share at end of holdYears. Required unless `ticker` resolves it from currentPrice × (1 + trailing CAGR)^holdYears. Also accepts the string "market" to project currentPrice at the S&P 500 trailing average.
+        haircut:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Volatility-drag haircut on expectedSalePrice. Either this OR `volatility` is required; if both are supplied, `haircut` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma). Either this OR `haircut` is required; if both are supplied, `haircut` wins. Derived haircut = 1 - exp(-(sigma^2 / 2) * holdYears).
+          maximum: 5
+        expectedMarketReturn:
+          type:
+          - number
+          - string
+          description: Per-year reinvestment rate. Defaults to SPY trailing CAGR for holdYears if omitted. The string "market" names that same default explicitly.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
     RsuResult:
       type: object
       description: RSU sell-at-vest vs hold result. All dollar amounts are USD.
@@ -284,9 +259,6 @@ components:
       - hold
       - sellNowInvest
       - holdMinusSell
-    Ticker:
-      type: string
-      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
     FilingStatus:
       type: string
       enum:
@@ -294,64 +266,92 @@ components:
       - married_joint
       - head_household
       description: United States federal filing status.
-    StateCode:
-      type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
-    RsuInput:
-      type: object
-      required:
-      - shares
-      - currentPrice
-      - ordinaryIncome
-      - filingStatus
-      - stateCode
-      - stillEmployed
-      - holdYears
-      properties:
-        shares:
-          type: integer
-          minimum: 1
-        currentPrice:
-          type: number
-          minimum: 0
-          description: Fair market value at vest.
-        ordinaryIncome:
-          type: number
-          minimum: 0
-        filingStatus:
-          $ref: '#/components/schemas/FilingStatus'
-        stateCode:
-          $ref: '#/components/schemas/StateCode'
-        stillEmployed:
-          type: boolean
-        holdYears:
-          type: number
-          minimum: 0.25
-          maximum: 5
-        expectedSalePrice:
-          type:
-          - number
-          - string
-          minimum: 0
-          description: Projected $/share at end of holdYears. Required unless `ticker` resolves it from currentPrice × (1 + trailing CAGR)^holdYears. Also accepts the string "market" to project currentPrice at the S&P 500 trailing average.
-        haircut:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: Volatility-drag haircut on expectedSalePrice. Either this OR `volatility` is required; if both are supplied, `haircut` wins.
-        volatility:
-          type: number
-          minimum: 0
-          description: Annualized volatility (sigma). Either this OR `haircut` is required; if both are supplied, `haircut` wins. Derived haircut = 1 - exp(-(sigma^2 / 2) * holdYears).
-          maximum: 5
-        expectedMarketReturn:
-          type:
-          - number
-          - string
-          description: Per-year reinvestment rate. Defaults to SPY trailing CAGR for holdYears if omitted. The string "market" names that same default explicitly.
-        ticker:
-          $ref: '#/components/schemas/Ticker'
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    RsuSuccess:
+      description: Successful rsu_sell_vs_hold result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/RsuResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              vest:
+                vestValue: 100000
+                federal: 33171.25
+                state: 9300.000000000004
+                socialSecurity: 0
+                medicare: 1450
+                additionalMedicare: 899.9999999999999
+                total: 44821.25
+                netCashAtVest: 55178.75
+                federalWithheldAtVest: 22000
+              bracketJump:
+                fromRate: 0.24
+                toRate: 0.35
+                thresholdAtJump: 201775
+              hold:
+                costBasis: 100
+                effectiveSalePrice: 118.81105408525967
+                sharesRetained: 551.7875
+                expectedGain: 10379.70450607022
+                capGainFederal: 1951.384447141201
+                capGainState: 965.3125190645296
+                capGainTotal: 2916.696966205731
+                isLongTerm: true
+                netAtYearN: 62641.75753986449
+              sellNowInvest:
+                netCashAtY0: 55178.75
+                marketGain: 7995.400875000001
+                capGainFederal: 1503.1353644999997
+                capGainState: 743.5722813749999
+                capGainTotal: 2246.707645875
+                isLongTerm: true
+                netAtYearN: 60927.443229125
+              holdMinusSell: 1714.3143107394935
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

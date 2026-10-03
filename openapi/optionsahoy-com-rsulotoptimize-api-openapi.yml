@@ -166,17 +166,6 @@ components:
                 afterTaxKept: 26815.699999999997
               deferralCallouts: []
   schemas:
-    IsoDate:
-      type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
-    FilingStatus:
-      type: string
-      enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
     StateCode:
       type: string
       pattern: ^[A-Z]{2}$
@@ -368,6 +357,10 @@ components:
       - attribution
       - horizonCards
       - deferralCallouts
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
     RsuLotOptimizeInput:
       type: object
       description: Vested RSU lots + a divest fraction. Chooses which lots to sell on which dates to divest the target share count at the lowest computed tax.
@@ -424,6 +417,13 @@ components:
           $ref: '#/components/schemas/FilingStatus'
         stateCode:
           $ref: '#/components/schemas/StateCode'
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

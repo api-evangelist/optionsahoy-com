@@ -52,164 +52,7 @@ paths:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
 components:
-  responses:
-    MethodNotAllowed:
-      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    NsoSuccess:
-      description: Successful nso_calculate result.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - ok
-            - result
-            properties:
-              ok:
-                type: boolean
-                const: true
-              result:
-                $ref: '#/components/schemas/NsoResult'
-              next_steps:
-                type: object
-                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
-                properties:
-                  web_tool:
-                    type: string
-                  also_run:
-                    type: array
-                    items:
-                      type: string
-                  beta:
-                    type: string
-          example:
-            ok: true
-            result:
-              exercise:
-                bargainElement: 200000
-                federal: 65971.25
-                state: 18685.210000000003
-                socialSecurity: 279
-                medicare: 2900
-                additionalMedicare: 1619.9999999999998
-                total: 89455.46
-                netCashSellAll: 110544.54
-              bracketJump:
-                fromRate: 0.24
-                toRate: 0.35
-                thresholdAtJump: 201775
-              hold:
-                funding: cash
-                costBasis: 50
-                strikeCost: 50000
-                cashNeededAtExercise: 139455.46000000002
-                sharesSoldToCover: 0
-                sharesRetained: 5000
-                effectiveSalePrice: 73.11449482169826
-                expectedGain: 115572.4741084913
-                ltcgFederal: 20967.625132396366
-                ltcgState: 10748.240092089694
-                ltcgTotal: 31715.86522448606
-                afterTaxProceedsAtSale: 333856.6088840052
-                y0OutflowGain: 20207.096154000006
-                y0OutflowLtcgFederal: 3038.934076952001
-                y0OutflowLtcgState: 1879.259942322
-                y0OutflowLtcgTotal: 4918.194019274
-                y0OutflowForgoneNet: 15288.902134726006
-                netAtYearN: 179112.2467492792
-              sellNowInvest:
-                netCashAtY0: 110544.54
-                marketGain: 16017.903846000003
-                ltcgFederal: 2402.6855769000003
-                ltcgState: 1489.6650576780012
-                ltcgTotal: 3892.3506345780015
-                netAtYearN: 122670.09321142199
-              holdMinusCashless: 56442.153537857215
   schemas:
-    NsoInput:
-      type: object
-      required:
-      - shares
-      - strike
-      - currentPrice
-      - ordinaryIncome
-      - filingStatus
-      - stateCode
-      - stillEmployed
-      - holdYears
-      - holdFunding
-      properties:
-        shares:
-          type: integer
-          minimum: 1
-        strike:
-          type: number
-          minimum: 0
-        currentPrice:
-          type: number
-          minimum: 0
-        ordinaryIncome:
-          type: number
-          minimum: 0
-        filingStatus:
-          $ref: '#/components/schemas/FilingStatus'
-        stateCode:
-          $ref: '#/components/schemas/StateCode'
-        stillEmployed:
-          type: boolean
-          description: FICA applies only when true.
-        holdYears:
-          type: number
-          minimum: 1
-          description: Hold horizon. Sub-1-year is short-term and out of scope.
-        expectedSalePrice:
-          type:
-          - number
-          - string
-          minimum: 0
-          description: Expected sale price at horizon, USD per share. Required unless `ticker` resolves it from currentPrice × (1 + trailing CAGR)^holdYears. Also accepts the string "market" to project currentPrice at the S&P 500 trailing average.
-        haircut:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: Volatility-drag haircut on expectedSalePrice. Either this OR `volatility` is required; if both are supplied, `haircut` wins.
-        volatility:
-          type: number
-          minimum: 0
-          description: Annualized volatility (sigma). Either this OR `haircut` is required; if both are supplied, `haircut` wins. Derived haircut = 1 - exp(-(sigma^2 / 2) * holdYears).
-          maximum: 5
-        expectedMarketReturn:
-          type:
-          - number
-          - string
-          description: Per-year median market return rate (vol-drag pre-applied). Defaults to SPY trailing CAGR for holdYears if omitted. The string "market" names that same default explicitly.
-        ticker:
-          $ref: '#/components/schemas/Ticker'
-        holdFunding:
-          type: string
-          enum:
-          - sell-to-cover
-          - cash
     NsoResult:
       type: object
       description: NSO exercise sell-vs-hold result. All dollar amounts are USD.
@@ -391,6 +234,74 @@ components:
     Ticker:
       type: string
       description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
+    NsoInput:
+      type: object
+      required:
+      - shares
+      - strike
+      - currentPrice
+      - ordinaryIncome
+      - filingStatus
+      - stateCode
+      - stillEmployed
+      - holdYears
+      - holdFunding
+      properties:
+        shares:
+          type: integer
+          minimum: 1
+        strike:
+          type: number
+          minimum: 0
+        currentPrice:
+          type: number
+          minimum: 0
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        stillEmployed:
+          type: boolean
+          description: FICA applies only when true.
+        holdYears:
+          type: number
+          minimum: 1
+          description: Hold horizon. Sub-1-year is short-term and out of scope.
+        expectedSalePrice:
+          type:
+          - number
+          - string
+          minimum: 0
+          description: Expected sale price at horizon, USD per share. Required unless `ticker` resolves it from currentPrice × (1 + trailing CAGR)^holdYears. Also accepts the string "market" to project currentPrice at the S&P 500 trailing average.
+        haircut:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Volatility-drag haircut on expectedSalePrice. Either this OR `volatility` is required; if both are supplied, `haircut` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma). Either this OR `haircut` is required; if both are supplied, `haircut` wins. Derived haircut = 1 - exp(-(sigma^2 / 2) * holdYears).
+          maximum: 5
+        expectedMarketReturn:
+          type:
+          - number
+          - string
+          description: Per-year median market return rate (vol-drag pre-applied). Defaults to SPY trailing CAGR for holdYears if omitted. The string "market" names that same default explicitly.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
+        holdFunding:
+          type: string
+          enum:
+          - sell-to-cover
+          - cash
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
     FilingStatus:
       type: string
       enum:
@@ -398,10 +309,99 @@ components:
       - married_joint
       - head_household
       description: United States federal filing status.
-    StateCode:
-      type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    NsoSuccess:
+      description: Successful nso_calculate result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/NsoResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              exercise:
+                bargainElement: 200000
+                federal: 65971.25
+                state: 18685.210000000003
+                socialSecurity: 279
+                medicare: 2900
+                additionalMedicare: 1619.9999999999998
+                total: 89455.46
+                netCashSellAll: 110544.54
+              bracketJump:
+                fromRate: 0.24
+                toRate: 0.35
+                thresholdAtJump: 201775
+              hold:
+                funding: cash
+                costBasis: 50
+                strikeCost: 50000
+                cashNeededAtExercise: 139455.46000000002
+                sharesSoldToCover: 0
+                sharesRetained: 5000
+                effectiveSalePrice: 73.11449482169826
+                expectedGain: 115572.4741084913
+                ltcgFederal: 20967.625132396366
+                ltcgState: 10748.240092089694
+                ltcgTotal: 31715.86522448606
+                afterTaxProceedsAtSale: 333856.6088840052
+                y0OutflowGain: 20207.096154000006
+                y0OutflowLtcgFederal: 3038.934076952001
+                y0OutflowLtcgState: 1879.259942322
+                y0OutflowLtcgTotal: 4918.194019274
+                y0OutflowForgoneNet: 15288.902134726006
+                netAtYearN: 179112.2467492792
+              sellNowInvest:
+                netCashAtY0: 110544.54
+                marketGain: 16017.903846000003
+                ltcgFederal: 2402.6855769000003
+                ltcgState: 1489.6650576780012
+                ltcgTotal: 3892.3506345780015
+                netAtYearN: 122670.09321142199
+              holdMinusCashless: 56442.153537857215
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

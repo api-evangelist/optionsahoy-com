@@ -1,7 +1,7 @@
 {
   "provider": "optionsahoy-com",
   "sources": [
-    "optionsahoy-com-openapi.json"
+    "_original/optionsahoy-com-openapi.json"
   ],
   "outputs": [
     "optionsahoy-com-concentration-api-openapi.yml",
@@ -14,15 +14,24 @@
     "optionsahoy-com-rsu-api-openapi.yml",
     "optionsahoy-com-rsulotoptimize-api-openapi.yml"
   ],
-  "archived": [
-    "archived openapi/optionsahoy-com-openapi.json"
-  ],
+  "archived": [],
   "errors": [],
   "warnings": [],
   "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
     "optionsahoy-com-openapi.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
     "optionsahoy-com-openapi.json: declared missing tag: RsuLotOptimize",
-    "apis.yml register: written (+9 apis, 11 total)"
+    "apis.yml register: already-registered"
   ],
-  "skipped": []
+  "skipped": [
+    "optionsahoy-com-concentration-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "optionsahoy-com-discovery-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "optionsahoy-com-equityfunding-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "optionsahoy-com-hedging-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "optionsahoy-com-iso-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "optionsahoy-com-nso-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "optionsahoy-com-qsbs-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "optionsahoy-com-rsu-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "optionsahoy-com-rsulotoptimize-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }
