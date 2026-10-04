@@ -55,6 +55,17 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
 components:
   schemas:
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
     EquityFundingInput:
       type: object
       description: Either `stacks` (v1.7+ multi-stack) OR legacy top-level `lots` + `currentPrice` (single-stack) must be provided.
@@ -171,21 +182,6 @@ components:
           minimum: 0
           description: Annualized σ used for stacks that omit their own `volatility`. Default 0.30.
           maximum: 5
-    StateCode:
-      type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
-    IsoDate:
-      type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
-    FilingStatus:
-      type: string
-      enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
     EquityFundingResult:
       type: object
       description: 'Equity-funding plan comparison: four named plans plus the full risk/wealth frontier. All dollar amounts are USD.'
@@ -941,9 +937,24 @@ components:
       - targetAfterTax
       - targetDateISO
       - appliedRiskTolerance
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
   responses:
     MethodNotAllowed:
       description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
       content:
         application/json:
           schema:
@@ -1337,17 +1348,6 @@ components:
               targetAfterTax: 200000
               targetDateISO: '2028-01-01'
               appliedRiskTolerance: 0.1
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

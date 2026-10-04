@@ -52,107 +52,13 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
 components:
   schemas:
-    Ticker:
-      type: string
-      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
-    ConcentrationInput:
-      type: object
-      required:
-      - positionValue
-      - costBasis
-      - acquisitionDate
-      - sector
-      - stateCode
-      - filingStatus
-      - ordinaryIncome
-      - totalAssets
-      properties:
-        positionValue:
-          type: number
-          minimum: 0
-          description: Current value of the concentrated position, USD.
-        costBasis:
-          type: number
-          minimum: 0
-        acquisitionDate:
-          $ref: '#/components/schemas/IsoDate'
-        sector:
-          $ref: '#/components/schemas/SectorKey'
-        stateCode:
-          $ref: '#/components/schemas/StateCode'
-        filingStatus:
-          $ref: '#/components/schemas/FilingStatus'
-        ordinaryIncome:
-          type: number
-          minimum: 0
-        totalAssets:
-          type: number
-          minimum: 0
-          description: Total investable portfolio in dollars (concentrated position + everything else). User-supplied; never inferred.
-        expectedPositionReturn:
-          type:
-          - number
-          - string
-          description: Annual return on the concentrated stock. Required unless `ticker` resolves it from trailing CAGR. Also accepts the string "market" to use the S&P 500 trailing average when the user has no view.
-        expectedMarketReturn:
-          type:
-          - number
-          - string
-          description: Annual return on diversified holdings + reinvested proceeds. Defaults to SPY trailing CAGR for the 3-year horizon if omitted. The string "market" names that same default explicitly.
-        ticker:
-          $ref: '#/components/schemas/Ticker'
-        volatilityDrag:
-          type: number
-          minimum: 0
-          maximum: 0.99
-          description: Multiplicative haircut on the 3y stock-price path. Either this OR `volatility` is required for drag; if both are supplied, `volatilityDrag` wins.
-        volatility:
-          type: number
-          minimum: 0
-          description: Annualized volatility (sigma). Used for the closed-form option pricing hedging path AND, when `volatilityDrag` is omitted, derives drag = 1 - exp(-(sigma^2 / 2) * 3). Either this OR `volatilityDrag` is required for drag.
-          maximum: 5
-        hedgeChoice:
-          type: object
-          required:
-          - kind
-          - protectionLevel
-          - tenorYears
-          properties:
-            kind:
-              type: string
-              enum:
-              - put
-              - collar
-            protectionLevel:
-              type: number
-              minimum: 0.05
-              maximum: 0.5
-            tenorYears:
-              type: number
-              minimum: 0.25
-            upsideCapPct:
-              type: number
-    StateCode:
-      type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
-    IsoDate:
-      type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
-    SectorKey:
+    FilingStatus:
       type: string
       enum:
-      - tech_software
-      - semiconductors
-      - consumer_cyclical
-      - consumer_defensive
-      - financials
-      - healthcare_biotech
-      - energy
-      - industrials
-      - communication
-      - broad_market
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
     ConcentrationResult:
       type: object
       description: Single-stock concentration analysis. All dollar amounts are USD.
@@ -423,16 +329,121 @@ components:
       - hedging
       - sectorContextLine
       - advisorBenchmarkLine
-    FilingStatus:
+    ConcentrationInput:
+      type: object
+      required:
+      - positionValue
+      - costBasis
+      - acquisitionDate
+      - sector
+      - stateCode
+      - filingStatus
+      - ordinaryIncome
+      - totalAssets
+      properties:
+        positionValue:
+          type: number
+          minimum: 0
+          description: Current value of the concentrated position, USD.
+        costBasis:
+          type: number
+          minimum: 0
+        acquisitionDate:
+          $ref: '#/components/schemas/IsoDate'
+        sector:
+          $ref: '#/components/schemas/SectorKey'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        ordinaryIncome:
+          type: number
+          minimum: 0
+        totalAssets:
+          type: number
+          minimum: 0
+          description: Total investable portfolio in dollars (concentrated position + everything else). User-supplied; never inferred.
+        expectedPositionReturn:
+          type:
+          - number
+          - string
+          description: Annual return on the concentrated stock. Required unless `ticker` resolves it from trailing CAGR. Also accepts the string "market" to use the S&P 500 trailing average when the user has no view.
+        expectedMarketReturn:
+          type:
+          - number
+          - string
+          description: Annual return on diversified holdings + reinvested proceeds. Defaults to SPY trailing CAGR for the 3-year horizon if omitted. The string "market" names that same default explicitly.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
+        volatilityDrag:
+          type: number
+          minimum: 0
+          maximum: 0.99
+          description: Multiplicative haircut on the 3y stock-price path. Either this OR `volatility` is required for drag; if both are supplied, `volatilityDrag` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma). Used for the closed-form option pricing hedging path AND, when `volatilityDrag` is omitted, derives drag = 1 - exp(-(sigma^2 / 2) * 3). Either this OR `volatilityDrag` is required for drag.
+          maximum: 5
+        hedgeChoice:
+          type: object
+          required:
+          - kind
+          - protectionLevel
+          - tenorYears
+          properties:
+            kind:
+              type: string
+              enum:
+              - put
+              - collar
+            protectionLevel:
+              type: number
+              minimum: 0.05
+              maximum: 0.5
+            tenorYears:
+              type: number
+              minimum: 0.25
+            upsideCapPct:
+              type: number
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
+    Ticker:
+      type: string
+      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
+    SectorKey:
       type: string
       enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
+      - tech_software
+      - semiconductors
+      - consumer_cyclical
+      - consumer_defensive
+      - financials
+      - healthcare_biotech
+      - energy
+      - industrials
+      - communication
+      - broad_market
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
   responses:
     MethodNotAllowed:
       description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
       content:
         application/json:
           schema:
@@ -717,17 +728,6 @@ components:
                 riskFreeRate: 0.045
               sectorContextLine: Tech / Software single names hit a 50%+ peak-to-trough drawdown in roughly 1 of every 5 rolling 3-year windows over 2014–2024. Even mega-caps aren’t exempt.
               advisorBenchmarkLine: Most fee-only advisors target ≤10% in any single name. You're at 33%.
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

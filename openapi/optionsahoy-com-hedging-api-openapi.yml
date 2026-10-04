@@ -217,47 +217,6 @@ components:
                 upperPct: 0.5
               recommended: none
   schemas:
-    ProtectivePutInput:
-      type: object
-      required:
-      - positionValue
-      - sector
-      - protectionLevel
-      - tenorYears
-      properties:
-        positionValue:
-          type: number
-          minimum: 0
-        sector:
-          $ref: '#/components/schemas/SectorKey'
-        volatility:
-          type: number
-          minimum: 0
-          description: Annualized implied volatility (σ). Defaults to a sector-typical implied volatility when omitted.
-          maximum: 5
-        protectionLevel:
-          type: number
-          minimum: 0.05
-          maximum: 0.5
-          description: Drawdown the put protects against, as a fraction (e.g. 0.20 = 20% below current).
-        tenorYears:
-          type: number
-          minimum: 0.25
-          description: Option tenor in years.
-        expectedReturn:
-          type: number
-          description: Override sector long-run drift μ.
-        spreadRiskLevel:
-          type: number
-          minimum: 0.01
-          maximum: 0.2
-          description: 'Put spread floor breach risk: target probability the stock ends below the spread''s short strike. Presets 0.20 / 0.10 / 0.05 / 0.01; off-preset values snap to the nearest. Affects only the putSpread block. Default 0.10.'
-        tickerLabel:
-          type: string
-          description: Optional ticker for warning copy (e.g. "AAPL").
-        ticker:
-          type: string
-          description: Optional public-stock symbol to derive implied volatility (e.g. "AAPL").
     SectorKey:
       type: string
       enum:
@@ -568,6 +527,47 @@ components:
       - payoffTable
       - payoffRange
       - recommended
+    ProtectivePutInput:
+      type: object
+      required:
+      - positionValue
+      - sector
+      - protectionLevel
+      - tenorYears
+      properties:
+        positionValue:
+          type: number
+          minimum: 0
+        sector:
+          $ref: '#/components/schemas/SectorKey'
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized implied volatility (σ). Defaults to a sector-typical implied volatility when omitted.
+          maximum: 5
+        protectionLevel:
+          type: number
+          minimum: 0.05
+          maximum: 0.5
+          description: Drawdown the put protects against, as a fraction (e.g. 0.20 = 20% below current).
+        tenorYears:
+          type: number
+          minimum: 0.25
+          description: Option tenor in years.
+        expectedReturn:
+          type: number
+          description: Override sector long-run drift μ.
+        spreadRiskLevel:
+          type: number
+          minimum: 0.01
+          maximum: 0.2
+          description: 'Put spread floor breach risk: target probability the stock ends below the spread''s short strike. Presets 0.20 / 0.10 / 0.05 / 0.01; off-preset values snap to the nearest. Affects only the putSpread block. Default 0.10.'
+        tickerLabel:
+          type: string
+          description: Optional ticker for warning copy (e.g. "AAPL").
+        ticker:
+          type: string
+          description: Optional public-stock symbol to derive implied volatility (e.g. "AAPL").
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

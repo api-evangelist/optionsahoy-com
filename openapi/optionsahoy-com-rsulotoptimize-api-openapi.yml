@@ -55,121 +55,18 @@ paths:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
 components:
-  responses:
-    MethodNotAllowed:
-      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    RsuLotOptimizeSuccess:
-      description: Successful rsu_lot_optimize result.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - ok
-            - result
-            properties:
-              ok:
-                type: boolean
-                const: true
-              result:
-                $ref: '#/components/schemas/RsuLotOptimizeResult'
-              next_steps:
-                type: object
-                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
-                properties:
-                  web_tool:
-                    type: string
-                  also_run:
-                    type: array
-                    items:
-                      type: string
-                  beta:
-                    type: string
-          example:
-            ok: true
-            result:
-              sharesToSell: 150
-              totalShares: 300
-              totalGross: 27000
-              totalTax: 184.3000000000011
-              totalAfterTax: 26815.699999999997
-              schedule:
-              - year: 2026
-                sales:
-                - lotIndex: 2
-                  vestDate: '2026-05-15T00:00:00.000Z'
-                  saleDate: '2026-06-24T12:00:00.000Z'
-                  year: 2026
-                  shares: 80
-                  grossProceeds: 14400
-                  gainAmount: -2400
-                  isLongTerm: false
-                  taxAttributed: -799.1999999999989
-                netLong: 0
-                netShort: -2400
-                tax: -799.1999999999989
-                effectiveRate: -0.055499999999999924
-                carryforwardGenerated: 0
-              - year: 2027
-                sales:
-                - lotIndex: 1
-                  vestDate: '2024-02-15T00:00:00.000Z'
-                  saleDate: '2027-01-02T00:00:00.000Z'
-                  year: 2027
-                  shares: 70
-                  grossProceeds: 12600
-                  gainAmount: 3500
-                  isLongTerm: true
-                  taxAttributed: 983.5
-                netLong: 3500
-                netShort: 0
-                tax: 983.5
-                effectiveRate: 0.07805555555555556
-                carryforwardGenerated: 0
-              keptUnrealizedGain: 11700
-              carryforwardRemaining: 0
-              headlineAfterTaxKept: 26815.699999999997
-              headlineDeltaVsFifo: 3103.3999999999996
-              attribution:
-                lotSelection: 3103.3999999999996
-                spreadingDeferral: -4.547473508864641e-13
-                total: 3103.399999999999
-              horizonCards:
-              - horizonYears: 1
-                totalTax: 309.1000000000011
-                afterTaxKept: 26690.899999999998
-              - horizonYears: 2
-                totalTax: 184.3000000000011
-                afterTaxKept: 26815.699999999997
-              - horizonYears: 3
-                totalTax: 184.3000000000011
-                afterTaxKept: 26815.699999999997
-              deferralCallouts: []
   schemas:
-    StateCode:
+    FilingStatus:
       type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
     RsuLotOptimizeResult:
       type: object
       description: 'RSU lot-order divest plan: which lots to sell on which dates to divest the target share count at the lowest total tax, versus a first-in-first-out (FIFO) sell order. All dollar amounts are USD.'
@@ -357,10 +254,10 @@ components:
       - attribution
       - horizonCards
       - deferralCallouts
-    IsoDate:
+    StateCode:
       type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
     RsuLotOptimizeInput:
       type: object
       description: Vested RSU lots + a divest fraction. Chooses which lots to sell on which dates to divest the target share count at the lowest computed tax.
@@ -417,13 +314,116 @@ components:
           $ref: '#/components/schemas/FilingStatus'
         stateCode:
           $ref: '#/components/schemas/StateCode'
-    FilingStatus:
-      type: string
-      enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
+  responses:
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    RsuLotOptimizeSuccess:
+      description: Successful rsu_lot_optimize result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/RsuLotOptimizeResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              sharesToSell: 150
+              totalShares: 300
+              totalGross: 27000
+              totalTax: 184.3000000000011
+              totalAfterTax: 26815.699999999997
+              schedule:
+              - year: 2026
+                sales:
+                - lotIndex: 2
+                  vestDate: '2026-05-15T00:00:00.000Z'
+                  saleDate: '2026-06-24T12:00:00.000Z'
+                  year: 2026
+                  shares: 80
+                  grossProceeds: 14400
+                  gainAmount: -2400
+                  isLongTerm: false
+                  taxAttributed: -799.1999999999989
+                netLong: 0
+                netShort: -2400
+                tax: -799.1999999999989
+                effectiveRate: -0.055499999999999924
+                carryforwardGenerated: 0
+              - year: 2027
+                sales:
+                - lotIndex: 1
+                  vestDate: '2024-02-15T00:00:00.000Z'
+                  saleDate: '2027-01-02T00:00:00.000Z'
+                  year: 2027
+                  shares: 70
+                  grossProceeds: 12600
+                  gainAmount: 3500
+                  isLongTerm: true
+                  taxAttributed: 983.5
+                netLong: 3500
+                netShort: 0
+                tax: 983.5
+                effectiveRate: 0.07805555555555556
+                carryforwardGenerated: 0
+              keptUnrealizedGain: 11700
+              carryforwardRemaining: 0
+              headlineAfterTaxKept: 26815.699999999997
+              headlineDeltaVsFifo: 3103.3999999999996
+              attribution:
+                lotSelection: 3103.3999999999996
+                spreadingDeferral: -4.547473508864641e-13
+                total: 3103.399999999999
+              horizonCards:
+              - horizonYears: 1
+                totalTax: 309.1000000000011
+                afterTaxKept: 26690.899999999998
+              - horizonYears: 2
+                totalTax: 184.3000000000011
+                afterTaxKept: 26815.699999999997
+              - horizonYears: 3
+                totalTax: 184.3000000000011
+                afterTaxKept: 26815.699999999997
+              deferralCallouts: []
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

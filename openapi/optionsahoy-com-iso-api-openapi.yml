@@ -54,90 +54,263 @@ paths:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
 components:
+  responses:
+    AmtIsoSuccess:
+      description: Successful amt_iso_optimize result.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - ok
+            - result
+            properties:
+              ok:
+                type: boolean
+                const: true
+              result:
+                $ref: '#/components/schemas/AmtIsoResult'
+              next_steps:
+                type: object
+                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
+                properties:
+                  web_tool:
+                    type: string
+                  also_run:
+                    type: array
+                    items:
+                      type: string
+                  beta:
+                    type: string
+          example:
+            ok: true
+            result:
+              crossoverShares: 240
+              crossoverBargain: 47650
+              alreadyInAmt: false
+              schedules:
+                lumpSum:
+                  label: lump_sum
+                  years:
+                  - year: 1
+                    shares: 10000
+                    bargain: 1980000
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 661510
+                    tmtState: 166600.00000000003
+                    amtOwedFederal: 580314
+                    amtOwedState: 136522.72400000005
+                    creditRecovered: 0
+                    cashTax: 828110
+                  - year: 2
+                    shares: 0
+                    bargain: 0
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 67854
+                    tmtState: 19343.31
+                    amtOwedFederal: 0
+                    amtOwedState: 0
+                    creditRecovered: 13342
+                    cashTax: 97931.276
+                  - year: 3
+                    shares: 0
+                    bargain: 0
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 67854
+                    tmtState: 19343.31
+                    amtOwedFederal: 0
+                    amtOwedState: 0
+                    creditRecovered: 13342
+                    cashTax: 97931.276
+                  - year: 4
+                    shares: 0
+                    bargain: 0
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 67854
+                    tmtState: 19343.31
+                    amtOwedFederal: 0
+                    amtOwedState: 0
+                    creditRecovered: 13342
+                    cashTax: 97931.276
+                  totalTax: 1121903.828
+                  baselineRegularTax: 445093.104
+                  exerciseTax: 676810.7239999999
+                  creditEarned: 580314
+                  creditRecovered: 40026
+                  creditRemaining: 540288
+                  grossGain: 2187625.781249999
+                  federalLTCG: 509969.9359374998
+                  stateLTCG: 265750.16890624986
+                  amtPremiumFV: 787767.4576205001
+                  nfv: 624138.2187857493
+                evenSplit:
+                  label: even_split
+                  years:
+                  - year: 1
+                    shares: 2500
+                    bargain: 495000
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 206454
+                    tmtState: 61540.27250000001
+                    amtOwedFederal: 125258
+                    amtOwedState: 31462.99650000001
+                    creditRecovered: 0
+                    cashTax: 267994.2725
+                  - year: 2
+                    shares: 2500
+                    bargain: 507499.99999999994
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 209954
+                    tmtState: 62634.02250000001
+                    amtOwedFederal: 128758
+                    amtOwedState: 32556.74650000001
+                    creditRecovered: 0
+                    cashTax: 272588.0225
+                  - year: 3
+                    shares: 2500
+                    bargain: 520312.49999999994
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 213541.5
+                    tmtState: 63755.11625000001
+                    amtOwedFederal: 132345.5
+                    amtOwedState: 33677.84025000001
+                    creditRecovered: 0
+                    cashTax: 277296.61625
+                  - year: 4
+                    shares: 2500
+                    bargain: 533445.3124999998
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 217218.68749999994
+                    tmtState: 64904.23734374999
+                    amtOwedFederal: 136022.68749999994
+                    amtOwedState: 34826.961343749994
+                    creditRecovered: 0
+                    cashTax: 282122.92484374996
+                  totalTax: 1100001.83609375
+                  baselineRegularTax: 445093.104
+                  exerciseTax: 654908.73209375
+                  creditEarned: 522384.18749999994
+                  creditRecovered: 0
+                  creditRemaining: 522384.18749999994
+                  grossGain: 2187625.781249999
+                  federalLTCG: 509969.9359374998
+                  stateLTCG: 265750.16890624986
+                  amtPremiumFV: 704447.8076958125
+                  nfv: 707457.8687104369
+                optimized:
+                  label: optimized
+                  years:
+                  - year: 1
+                    shares: 1350
+                    bargain: 267300
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 142698
+                    tmtState: 41616.52250000001
+                    amtOwedFederal: 61502
+                    amtOwedState: 11539.246500000008
+                    creditRecovered: 0
+                    cashTax: 184314.52250000002
+                  - year: 2
+                    shares: 2955
+                    bargain: 599864.9999999999
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 235816.19999999998
+                    tmtState: 69990.55
+                    amtOwedFederal: 154620.19999999998
+                    amtOwedState: 39913.274000000005
+                    creditRecovered: 0
+                    cashTax: 305806.75
+                  - year: 3
+                    shares: 2883
+                    bargain: 600024.3749999999
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 235864.23749999996
+                    tmtState: 70001.70625
+                    amtOwedFederal: 154668.23749999996
+                    amtOwedState: 39924.430250000005
+                    creditRecovered: 0
+                    cashTax: 305865.94375
+                  - year: 4
+                    shares: 2812
+                    bargain: 600019.2874999997
+                    regularFederal: 81196
+                    regularState: 30077.275999999998
+                    tmtFederal: 235862.10074999993
+                    tmtState: 70001.35012499998
+                    amtOwedFederal: 154666.10074999993
+                    amtOwedState: 39924.074124999985
+                    creditRecovered: 0
+                    cashTax: 305863.4508749999
+                  totalTax: 1101850.667125
+                  baselineRegularTax: 445093.104
+                  exerciseTax: 656757.5631249999
+                  creditEarned: 525456.5382499999
+                  creditRecovered: 0
+                  creditRemaining: 525456.5382499999
+                  grossGain: 2187625.781249999
+                  federalLTCG: 509969.9359374998
+                  stateLTCG: 265750.16890624986
+                  amtPremiumFV: 697940.0040770625
+                  nfv: 713965.6723291869
+              stateHasAmt: true
+              bargainPerShare: 198
+              timing:
+                grantExpiration: '2032-01-15T00:00:00.000Z'
+                qdEligibleDate: '2024-01-15T00:00:00.000Z'
+                exerciseWindowClose: null
+                maxHorizon: 5
+                daysUntilWindowClose: null
+                windowClosed: false
+                qdNotYetEligible: false
+              effectiveHorizon: 4
+    MethodNotAllowed:
+      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
   schemas:
-    Ticker:
+    FilingStatus:
       type: string
-      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
-    StateCode:
-      type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
     IsoDate:
       type: string
       format: date
       description: ISO 8601 date string (YYYY-MM-DD).
-    AmtIsoInput:
-      type: object
-      required:
-      - shares
-      - strike
-      - fmv
-      - filingStatus
-      - ordinaryIncome
-      - stateCode
-      - horizon
-      - grantDate
-      - hasLeftCompany
-      properties:
-        shares:
-          type: integer
-          minimum: 1
-          description: Total ISO shares to exercise across the horizon.
-        strike:
-          type: number
-          minimum: 0
-          description: Strike price per share, USD.
-        fmv:
-          type: number
-          minimum: 0
-          description: Fair market value per share today (year 1).
-        expectedGrowth:
-          type:
-          - number
-          - string
-          description: Arithmetic-mean annual growth rate, e.g. 0.10 for 10%/year. Required unless `ticker` resolves it from trailing CAGR. Also accepts the string "market" to use the S&P 500 trailing average when the user has no view.
-        ticker:
-          $ref: '#/components/schemas/Ticker'
-        volatilityDrag:
-          type: number
-          minimum: 0
-          maximum: 0.99
-          description: Multiplicative haircut at the planning horizon. Either this OR `volatility` is required; if both are supplied, `volatilityDrag` wins.
-        volatility:
-          type: number
-          minimum: 0
-          description: Annualized volatility (sigma) of the stock. Either this OR `volatilityDrag` is required; if both are supplied, `volatilityDrag` wins. Derived drag = 1 - exp(-(sigma^2 / 2) * horizon).
-          maximum: 5
-        filingStatus:
-          $ref: '#/components/schemas/FilingStatus'
-        ordinaryIncome:
-          type: number
-          minimum: 0
-          description: 'Annual ordinary income excluding the exercise. Taxable income after deductions, not gross wages: no standard or itemized deduction is applied.'
-        stateCode:
-          $ref: '#/components/schemas/StateCode'
-        carryforwardCredit:
-          type: number
-          minimum: 0
-          description: Existing federal AMT credit from prior years. Optional; defaults to 0 (most first-time exercisers have none).
-        horizon:
-          type: integer
-          minimum: 1
-          maximum: 10
-          description: Planning horizon in years.
-        cashReturnRate:
-          type: number
-          description: Annual after-tax return on idle cash, used to time-value AMT premiums. Optional; defaults to 0.04 when omitted.
-        grantDate:
-          $ref: '#/components/schemas/IsoDate'
-          description: ISO grant date. Drives the 10-year expiration and 2-year qualifying-disposition gate.
-        hasLeftCompany:
-          type: boolean
-        terminationDate:
-          oneOf:
-          - $ref: '#/components/schemas/IsoDate'
-          - type: 'null'
-          description: Termination date if departed; null otherwise. When set, opens the 90-day post-termination exercise window.
+    Ticker:
+      type: string
+      description: Optional public-stock symbol (e.g. "NVDA"). When set, the API substitutes the ticker's trailing CAGR for any unsupplied expected-return / sale-price field instead of requiring the caller to invent one. ~90 symbols covered; unknown tickers fall through to 'required field' 400 errors.
     AmtIsoResult:
       type: object
       description: ISO/AMT exercise optimization result. All dollar amounts are USD.
@@ -712,255 +885,82 @@ components:
       - bargainPerShare
       - timing
       - effectiveHorizon
-    FilingStatus:
+    StateCode:
       type: string
-      enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
-  responses:
-    AmtIsoSuccess:
-      description: Successful amt_iso_optimize result.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - ok
-            - result
-            properties:
-              ok:
-                type: boolean
-                const: true
-              result:
-                $ref: '#/components/schemas/AmtIsoResult'
-              next_steps:
-                type: object
-                description: 'Constant per endpoint: the free interactive version of this calculator, related endpoints worth running next, and the OptionsAhoy beta for integrated multi-position optimization.'
-                properties:
-                  web_tool:
-                    type: string
-                  also_run:
-                    type: array
-                    items:
-                      type: string
-                  beta:
-                    type: string
-          example:
-            ok: true
-            result:
-              crossoverShares: 240
-              crossoverBargain: 47650
-              alreadyInAmt: false
-              schedules:
-                lumpSum:
-                  label: lump_sum
-                  years:
-                  - year: 1
-                    shares: 10000
-                    bargain: 1980000
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 661510
-                    tmtState: 166600.00000000003
-                    amtOwedFederal: 580314
-                    amtOwedState: 136522.72400000005
-                    creditRecovered: 0
-                    cashTax: 828110
-                  - year: 2
-                    shares: 0
-                    bargain: 0
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 67854
-                    tmtState: 19343.31
-                    amtOwedFederal: 0
-                    amtOwedState: 0
-                    creditRecovered: 13342
-                    cashTax: 97931.276
-                  - year: 3
-                    shares: 0
-                    bargain: 0
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 67854
-                    tmtState: 19343.31
-                    amtOwedFederal: 0
-                    amtOwedState: 0
-                    creditRecovered: 13342
-                    cashTax: 97931.276
-                  - year: 4
-                    shares: 0
-                    bargain: 0
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 67854
-                    tmtState: 19343.31
-                    amtOwedFederal: 0
-                    amtOwedState: 0
-                    creditRecovered: 13342
-                    cashTax: 97931.276
-                  totalTax: 1121903.828
-                  baselineRegularTax: 445093.104
-                  exerciseTax: 676810.7239999999
-                  creditEarned: 580314
-                  creditRecovered: 40026
-                  creditRemaining: 540288
-                  grossGain: 2187625.781249999
-                  federalLTCG: 509969.9359374998
-                  stateLTCG: 265750.16890624986
-                  amtPremiumFV: 787767.4576205001
-                  nfv: 624138.2187857493
-                evenSplit:
-                  label: even_split
-                  years:
-                  - year: 1
-                    shares: 2500
-                    bargain: 495000
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 206454
-                    tmtState: 61540.27250000001
-                    amtOwedFederal: 125258
-                    amtOwedState: 31462.99650000001
-                    creditRecovered: 0
-                    cashTax: 267994.2725
-                  - year: 2
-                    shares: 2500
-                    bargain: 507499.99999999994
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 209954
-                    tmtState: 62634.02250000001
-                    amtOwedFederal: 128758
-                    amtOwedState: 32556.74650000001
-                    creditRecovered: 0
-                    cashTax: 272588.0225
-                  - year: 3
-                    shares: 2500
-                    bargain: 520312.49999999994
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 213541.5
-                    tmtState: 63755.11625000001
-                    amtOwedFederal: 132345.5
-                    amtOwedState: 33677.84025000001
-                    creditRecovered: 0
-                    cashTax: 277296.61625
-                  - year: 4
-                    shares: 2500
-                    bargain: 533445.3124999998
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 217218.68749999994
-                    tmtState: 64904.23734374999
-                    amtOwedFederal: 136022.68749999994
-                    amtOwedState: 34826.961343749994
-                    creditRecovered: 0
-                    cashTax: 282122.92484374996
-                  totalTax: 1100001.83609375
-                  baselineRegularTax: 445093.104
-                  exerciseTax: 654908.73209375
-                  creditEarned: 522384.18749999994
-                  creditRecovered: 0
-                  creditRemaining: 522384.18749999994
-                  grossGain: 2187625.781249999
-                  federalLTCG: 509969.9359374998
-                  stateLTCG: 265750.16890624986
-                  amtPremiumFV: 704447.8076958125
-                  nfv: 707457.8687104369
-                optimized:
-                  label: optimized
-                  years:
-                  - year: 1
-                    shares: 1350
-                    bargain: 267300
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 142698
-                    tmtState: 41616.52250000001
-                    amtOwedFederal: 61502
-                    amtOwedState: 11539.246500000008
-                    creditRecovered: 0
-                    cashTax: 184314.52250000002
-                  - year: 2
-                    shares: 2955
-                    bargain: 599864.9999999999
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 235816.19999999998
-                    tmtState: 69990.55
-                    amtOwedFederal: 154620.19999999998
-                    amtOwedState: 39913.274000000005
-                    creditRecovered: 0
-                    cashTax: 305806.75
-                  - year: 3
-                    shares: 2883
-                    bargain: 600024.3749999999
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 235864.23749999996
-                    tmtState: 70001.70625
-                    amtOwedFederal: 154668.23749999996
-                    amtOwedState: 39924.430250000005
-                    creditRecovered: 0
-                    cashTax: 305865.94375
-                  - year: 4
-                    shares: 2812
-                    bargain: 600019.2874999997
-                    regularFederal: 81196
-                    regularState: 30077.275999999998
-                    tmtFederal: 235862.10074999993
-                    tmtState: 70001.35012499998
-                    amtOwedFederal: 154666.10074999993
-                    amtOwedState: 39924.074124999985
-                    creditRecovered: 0
-                    cashTax: 305863.4508749999
-                  totalTax: 1101850.667125
-                  baselineRegularTax: 445093.104
-                  exerciseTax: 656757.5631249999
-                  creditEarned: 525456.5382499999
-                  creditRecovered: 0
-                  creditRemaining: 525456.5382499999
-                  grossGain: 2187625.781249999
-                  federalLTCG: 509969.9359374998
-                  stateLTCG: 265750.16890624986
-                  amtPremiumFV: 697940.0040770625
-                  nfv: 713965.6723291869
-              stateHasAmt: true
-              bargainPerShare: 198
-              timing:
-                grantExpiration: '2032-01-15T00:00:00.000Z'
-                qdEligibleDate: '2024-01-15T00:00:00.000Z'
-                exerciseWindowClose: null
-                maxHorizon: 5
-                daysUntilWindowClose: null
-                windowClosed: false
-                qdNotYetEligible: false
-              effectiveHorizon: 4
-    MethodNotAllowed:
-      description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    AmtIsoInput:
+      type: object
+      required:
+      - shares
+      - strike
+      - fmv
+      - filingStatus
+      - ordinaryIncome
+      - stateCode
+      - horizon
+      - grantDate
+      - hasLeftCompany
+      properties:
+        shares:
+          type: integer
+          minimum: 1
+          description: Total ISO shares to exercise across the horizon.
+        strike:
+          type: number
+          minimum: 0
+          description: Strike price per share, USD.
+        fmv:
+          type: number
+          minimum: 0
+          description: Fair market value per share today (year 1).
+        expectedGrowth:
+          type:
+          - number
+          - string
+          description: Arithmetic-mean annual growth rate, e.g. 0.10 for 10%/year. Required unless `ticker` resolves it from trailing CAGR. Also accepts the string "market" to use the S&P 500 trailing average when the user has no view.
+        ticker:
+          $ref: '#/components/schemas/Ticker'
+        volatilityDrag:
+          type: number
+          minimum: 0
+          maximum: 0.99
+          description: Multiplicative haircut at the planning horizon. Either this OR `volatility` is required; if both are supplied, `volatilityDrag` wins.
+        volatility:
+          type: number
+          minimum: 0
+          description: Annualized volatility (sigma) of the stock. Either this OR `volatilityDrag` is required; if both are supplied, `volatilityDrag` wins. Derived drag = 1 - exp(-(sigma^2 / 2) * horizon).
+          maximum: 5
+        filingStatus:
+          $ref: '#/components/schemas/FilingStatus'
+        ordinaryIncome:
+          type: number
+          minimum: 0
+          description: 'Annual ordinary income excluding the exercise. Taxable income after deductions, not gross wages: no standard or itemized deduction is applied.'
+        stateCode:
+          $ref: '#/components/schemas/StateCode'
+        carryforwardCredit:
+          type: number
+          minimum: 0
+          description: Existing federal AMT credit from prior years. Optional; defaults to 0 (most first-time exercisers have none).
+        horizon:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Planning horizon in years.
+        cashReturnRate:
+          type: number
+          description: Annual after-tax return on idle cash, used to time-value AMT premiums. Optional; defaults to 0.04 when omitted.
+        grantDate:
+          $ref: '#/components/schemas/IsoDate'
+          description: ISO grant date. Drives the 10-year expiration and 2-year qualifying-disposition gate.
+        hasLeftCompany:
+          type: boolean
+        terminationDate:
+          oneOf:
+          - $ref: '#/components/schemas/IsoDate'
+          - type: 'null'
+          description: Termination date if departed; null otherwise. When set, opens the 90-day post-termination exercise window.
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

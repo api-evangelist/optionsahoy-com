@@ -53,6 +53,17 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
 components:
   schemas:
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
     QsbsResult:
       type: object
       description: Section 1202 QSBS qualification result. All dollar amounts are USD.
@@ -165,10 +176,6 @@ components:
       type: string
       pattern: ^[A-Z]{2}$
       description: Two-letter United States state code (e.g. CA, NY, TX).
-    IsoDate:
-      type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
     QsbsInput:
       type: object
       required:
@@ -246,13 +253,6 @@ components:
           minimum: 0
         filingStatus:
           $ref: '#/components/schemas/FilingStatus'
-    FilingStatus:
-      type: string
-      enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
   responses:
     MethodNotAllowed:
       description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
