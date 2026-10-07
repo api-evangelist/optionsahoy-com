@@ -277,6 +277,8 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: Pricing
+  url: https://optionsahoy.com/for-agents
 - type: AgenticAccess
   url: agentic-access/optionsahoy-com-agentic-access.yml
 - type: VulnerabilityDisclosure
