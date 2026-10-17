@@ -56,17 +56,6 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
 components:
   schemas:
-    FilingStatus:
-      type: string
-      enum:
-      - single
-      - married_joint
-      - head_household
-      description: United States federal filing status.
-    IsoDate:
-      type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
     RsuLotOptimizeResult:
       type: object
       description: 'RSU lot-order divest plan: which lots to sell on which dates to divest the target share count at the lowest total tax, versus a first-in-first-out (FIFO) sell order. All dollar amounts are USD.'
@@ -254,10 +243,6 @@ components:
       - attribution
       - horizonCards
       - deferralCallouts
-    StateCode:
-      type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
     RsuLotOptimizeInput:
       type: object
       description: Vested RSU lots + a divest fraction. Chooses which lots to sell on which dates to divest the target share count at the lowest computed tax.
@@ -314,20 +299,24 @@ components:
           $ref: '#/components/schemas/FilingStatus'
         stateCode:
           $ref: '#/components/schemas/StateCode'
+    FilingStatus:
+      type: string
+      enum:
+      - single
+      - married_joint
+      - head_household
+      description: United States federal filing status.
+    StateCode:
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
+    IsoDate:
+      type: string
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
   responses:
     MethodNotAllowed:
       description: Endpoint accepts only POST (and OPTIONS for CORS preflight).
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
       content:
         application/json:
           schema:
@@ -424,6 +413,17 @@ components:
                 totalTax: 184.3000000000011
                 afterTaxKept: 26815.699999999997
               deferralCallouts: []
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents

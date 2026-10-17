@@ -60,10 +60,10 @@ components:
       - married_joint
       - head_household
       description: United States federal filing status.
-    IsoDate:
+    StateCode:
       type: string
-      format: date
-      description: ISO 8601 date string (YYYY-MM-DD).
+      pattern: ^[A-Z]{2}$
+      description: Two-letter United States state code (e.g. CA, NY, TX).
     QsbsResult:
       type: object
       description: Section 1202 QSBS qualification result. All dollar amounts are USD.
@@ -172,10 +172,10 @@ components:
       - yearsUntilFullExclusion
       - era
       - tests
-    StateCode:
+    IsoDate:
       type: string
-      pattern: ^[A-Z]{2}$
-      description: Two-letter United States state code (e.g. CA, NY, TX).
+      format: date
+      description: ISO 8601 date string (YYYY-MM-DD).
     QsbsInput:
       type: object
       required:
@@ -265,17 +265,6 @@ components:
             properties:
               error:
                 type: string
-    BadRequest:
-      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: string
     QsbsSuccess:
       description: Successful qsbs_check result.
       content:
@@ -344,6 +333,17 @@ components:
                 label: Held at least 5 years
                 status: pass
                 detail: 6.4 years held — 100% exclusion tier.
+    BadRequest:
+      description: Invalid input or calculation failure. The `error` string names the specific field or condition.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: string
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents
