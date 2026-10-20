@@ -19,6 +19,73 @@
     registered_name: io.github.AlvisoOculus/optionsahoy-mcp
     register_id: io.github.AlvisoOculus/optionsahoy-mcp
     detected_by: sweep-agent-tools.py
-    detected: '2026-10-15'
+    detected: '2026-10-19'
+  status: not-a-workflow
+  arazzo: null
+- slug: optionsahoy-com-a2a-protocol-own-agent-card
+  label: A2A protocol (own Agent Card)
+  partner_name: A2A protocol (own Agent Card)
+  category: A2A agent
+  type: register
+  channel: provider-built
+  evidence: https://optionsahoy.com/.well-known/agent-card.json
+  source: edge
+  relationship: compatible
+  contract_reference:
+    register: provider's own /.well-known/agent-card.json
+    spec_file: null
+    standard: A2A
+    role: a2a-agent-card
+    registered_name: OptionsAhoy Equity Planner
+    organization: AlphaLatitude Inc.
+    matched_domain: optionsahoy.com
+    matched_by: own-domain
+    detected_by: sweep-ai-agents.py
+    detected: '2026-10-19'
+  status: not-a-workflow
+  arazzo: null
+- slug: optionsahoy-com-a2aregistry-org
+  label: a2aregistry.org
+  partner_name: a2aregistry.org
+  category: A2A agent registry
+  type: register
+  channel: standard-directory
+  evidence: https://a2aregistry.org/api/agents/d1bca6b1-b42f-4a82-a153-db35d6d71561
+  source: edge
+  relationship: compatible
+  contract_reference:
+    register: a2aregistry.org /api/agents
+    spec_file: null
+    standard: A2A
+    role: a2a-registry-listing
+    registered_name: AlphaLatitude Inc.
+    matched_domain: optionsahoy.com
+    matched_by: domain+repo-name
+    matched_via: card-host
+    listings_context: 1
+    sample_agents:
+    - OptionsAhoy Equity Planner
+    detected_by: sweep-ai-agents.py
+    detected: '2026-10-19'
+  status: not-a-workflow
+  arazzo: null
+- slug: optionsahoy-com-agent-skills-own-github-org
+  label: Agent Skills (own GitHub org)
+  partner_name: Agent Skills (own GitHub org)
+  category: Agent Skills package
+  type: register
+  channel: provider-built
+  evidence: https://github.com/AlvisoOculus/optionsahoy-claude-plugin
+  source: edge
+  relationship: compatible
+  contract_reference:
+    register: 'provider''s own GitHub org (GitHub REST API: repo + git tree holds SKILL.md)'
+    spec_file: null
+    standard: Agent Skills (agentskills.io)
+    role: agent-skills-repo
+    matched_org: alvisooculus
+    matched_by: org-profile-domain:optionsahoy.com
+    detected_by: sweep-agent-skills.py
+    detected: '2026-10-20'
   status: not-a-workflow
   arazzo: null
