@@ -731,3 +731,9 @@ components:
 externalDocs:
   description: Integration surface, citation guidance, and roadmap
   url: https://optionsahoy.com/for-agents
+x-provenance:
+  method: harvested
+  publisher: OptionsAhoy
+  source: https://optionsahoy.com/openapi.json
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
